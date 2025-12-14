@@ -24,7 +24,7 @@
 #include "env_validate.h"
 
 /**
- * 2017 Victor Perez Marlin for stm32f1 test
+ * 10 Dec 2017 Victor Perez Marlin for stm32f1 test
  */
 
 #define BOARD_INFO_NAME      "STM3R Mini"
@@ -73,7 +73,7 @@
 //
 // Misc. Functions
 //
-#define SD_SS_PIN                           PA15
+#define SDSS                                PA15
 #define LED_PIN                             PB2
 
 //
@@ -144,7 +144,7 @@
       #error "LCD_I2C_PANELOLU2 is not supported."
     #elif ENABLED(LCD_I2C_VIKI)
       #error "LCD_I2C_VIKI is not supported."
-    #elif ANY(VIKI2, miniVIKI)
+    #elif EITHER(VIKI2, miniVIKI)
       #error "VIKI2 / miniVIKI is not supported."
     #elif ENABLED(ELB_FULL_GRAPHIC_CONTROLLER)
       #error "ELB_FULL_GRAPHIC_CONTROLLER is not supported."

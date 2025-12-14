@@ -35,14 +35,14 @@
 //
 // EEPROM
 //
-#if ANY(NO_EEPROM_SELECTED, FLASH_EEPROM_EMULATION)
+#if EITHER(NO_EEPROM_SELECTED, FLASH_EEPROM_EMULATION)
   #undef NO_EEPROM_SELECTED
   #ifndef FLASH_EEPROM_EMULATION
     #define FLASH_EEPROM_EMULATION
   #endif
-  #define EEPROM_PAGE_SIZE                0x800U  // 2K
-  #define EEPROM_START_ADDRESS (0x8000000UL + (STM32_FLASH_SIZE) * 1024UL - (EEPROM_PAGE_SIZE) * 2UL)
-  #define MARLIN_EEPROM_SIZE     EEPROM_PAGE_SIZE
+  #define EEPROM_PAGE_SIZE      (0x800UL) // 2K
+  #define EEPROM_START_ADDRESS  (0x8000000UL + (STM32_FLASH_SIZE) * 1024UL - (EEPROM_PAGE_SIZE) * 2UL)
+  #define MARLIN_EEPROM_SIZE    EEPROM_PAGE_SIZE
 #endif
 
 //
@@ -53,8 +53,10 @@
 //
 // Probe enable
 //
-#if ENABLED(PROBE_ENABLE_DISABLE) && !defined(PROBE_ENABLE_PIN)
-  #define PROBE_ENABLE_PIN            SERVO0_PIN
+#if ENABLED(PROBE_ENABLE_DISABLE)
+  #ifndef PROBE_ENABLE_PIN
+    #define PROBE_ENABLE_PIN          SERVO0_PIN
+  #endif
 #endif
 
 //
@@ -141,17 +143,23 @@
 
 #if HAS_TMC_UART
   #define X_SERIAL_TX_PIN                   PD9   // X_CS_PIN
+  #define X_SERIAL_RX_PIN        X_SERIAL_TX_PIN
+
   #define Y_SERIAL_TX_PIN                   PD8   // Y_CS_PIN
+  #define Y_SERIAL_RX_PIN        Y_SERIAL_TX_PIN
+
   #define Z_SERIAL_TX_PIN                   PB10  // Z_CS_PIN
+  #define Z_SERIAL_RX_PIN        Z_SERIAL_TX_PIN
+
   #define E0_SERIAL_TX_PIN                  PB2   // E0_CS_PIN
+  #define E0_SERIAL_RX_PIN      E0_SERIAL_TX_PIN
+
   #define E1_SERIAL_TX_PIN                  PA6   // E1_CS_PIN
+  #define E1_SERIAL_RX_PIN      E1_SERIAL_TX_PIN
 
   // Reduce baud rate to improve software serial reliability
-  #ifndef TMC_BAUD_RATE
-    #define TMC_BAUD_RATE                  19200
-  #endif
-
-#endif // HAS_TMC_UART
+  #define TMC_BAUD_RATE                    19200
+#endif
 
 //
 // Temperature Sensors
@@ -210,7 +218,8 @@
 // Must use soft SPI because Marlin's default hardware SPI is tied to LCD's EXP2
 //
 #if SD_CONNECTION_IS(LCD)
-  #define SD_SS_PIN                  EXP2_04_PIN
+  #define SDSS                       EXP2_04_PIN
+  #define SD_SS_PIN                         SDSS
   #define SD_SCK_PIN                 EXP2_02_PIN
   #define SD_MISO_PIN                EXP2_01_PIN
   #define SD_MOSI_PIN                EXP2_06_PIN
@@ -226,9 +235,8 @@
 #endif
 
 //
-// LCD / Controller
+// LCDs and Controllers
 //
-
 #if IS_TFTGLCD_PANEL
 
   #if ENABLED(TFTGLCD_PANEL_SPI)
@@ -276,7 +284,7 @@
                                                   //   results in LCD soft SPI mode 3, SD soft SPI mode 0
 
       #define LCD_RESET_PIN          EXP1_05_PIN  // Must be high or open for LCD to operate normally.
-      #if ANY(FYSETC_MINI_12864_1_2, FYSETC_MINI_12864_2_0)
+      #if EITHER(FYSETC_MINI_12864_1_2, FYSETC_MINI_12864_2_0)
         #ifndef RGB_LED_R_PIN
           #define RGB_LED_R_PIN      EXP1_06_PIN
         #endif
@@ -289,7 +297,7 @@
       #elif ENABLED(FYSETC_MINI_12864_2_1)
         #define NEOPIXEL_PIN         EXP1_06_PIN
       #endif
-    #endif // FYSETC_MINI_12864
+    #endif // !FYSETC_MINI_12864
 
     #if IS_ULTIPANEL
       #define LCD_PINS_D5            EXP1_06_PIN
@@ -308,16 +316,22 @@
 
 // Alter timing for graphical display
 #if IS_U8GLIB_ST7920
-  #define BOARD_ST7920_DELAY_1               120
-  #define BOARD_ST7920_DELAY_2                80
-  #define BOARD_ST7920_DELAY_3               580
+  #ifndef BOARD_ST7920_DELAY_1
+    #define BOARD_ST7920_DELAY_1             120
+  #endif
+  #ifndef BOARD_ST7920_DELAY_2
+    #define BOARD_ST7920_DELAY_2              80
+  #endif
+  #ifndef BOARD_ST7920_DELAY_3
+    #define BOARD_ST7920_DELAY_3             580
+  #endif
 #endif
 
 //
 // NeoPixel LED
 //
-#ifndef BOARD_NEOPIXEL_PIN
-  #define BOARD_NEOPIXEL_PIN                PC11  // RGB1
+#ifndef NEOPIXEL_PIN
+  #define NEOPIXEL_PIN                      PC11  // RGB1
 #endif
 
 #ifndef NEOPIXEL2_PIN

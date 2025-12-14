@@ -27,7 +27,7 @@
 #include "bedlevel.h"
 #include "../../module/planner.h"
 
-#if ANY(MESH_BED_LEVELING, PROBE_MANUALLY)
+#if EITHER(MESH_BED_LEVELING, PROBE_MANUALLY)
   #include "../../module/motion.h"
 #endif
 
@@ -77,7 +77,7 @@ void set_bed_leveling_enabled(const bool enable/*=true*/) {
 
     // Get the corrected leveled / unleveled position
     planner.apply_modifiers(current_position, true);    // Physical position with all modifiers
-    FLIP(planner.leveling_active);                      // Toggle leveling between apply and unapply
+    planner.leveling_active ^= true;                    // Toggle leveling between apply and unapply
     planner.unapply_modifiers(current_position, true);  // Logical position with modifiers removed
 
     sync_plan_position();
@@ -91,7 +91,7 @@ TemporaryBedLevelingState::TemporaryBedLevelingState(const bool enable) : saved(
 
 #if ENABLED(ENABLE_LEVELING_FADE_HEIGHT)
 
-  void set_z_fade_height(const float zfh, const bool do_report/*=true*/) {
+  void set_z_fade_height(const_float_t zfh, const bool do_report/*=true*/) {
 
     if (planner.z_fade_height == zfh) return;
 
@@ -120,7 +120,7 @@ void reset_bed_level() {
   TERN_(ABL_PLANAR, planner.bed_level_matrix.set_to_identity());
 }
 
-#if ANY(AUTO_BED_LEVELING_BILINEAR, MESH_BED_LEVELING)
+#if EITHER(AUTO_BED_LEVELING_BILINEAR, MESH_BED_LEVELING)
 
   /**
    * Enable to produce output in JSON format suitable
@@ -137,8 +137,8 @@ void reset_bed_level() {
    */
   void print_2d_array(const uint8_t sx, const uint8_t sy, const uint8_t precision, const float *values) {
     #ifndef SCAD_MESH_OUTPUT
-      for (uint8_t x = 0; x < sx; ++x) {
-        SERIAL_ECHO_SP(precision + (x < 10 ? 3 : 2));
+      LOOP_L_N(x, sx) {
+        serial_spaces(precision + (x < 10 ? 3 : 2));
         SERIAL_ECHO(x);
       }
       SERIAL_EOL();
@@ -146,19 +146,19 @@ void reset_bed_level() {
     #ifdef SCAD_MESH_OUTPUT
       SERIAL_ECHOLNPGM("measured_z = ["); // open 2D array
     #endif
-    for (uint8_t y = 0; y < sy; ++y) {
+    LOOP_L_N(y, sy) {
       #ifdef SCAD_MESH_OUTPUT
         SERIAL_ECHOPGM(" [");             // open sub-array
       #else
         if (y < 10) SERIAL_CHAR(' ');
         SERIAL_ECHO(y);
       #endif
-      for (uint8_t x = 0; x < sx; ++x) {
+      LOOP_L_N(x, sx) {
         SERIAL_CHAR(' ');
         const float offset = values[x * sy + y];
         if (!isnan(offset)) {
           if (offset >= 0) SERIAL_CHAR('+');
-          SERIAL_ECHO(p_float_t(offset, precision));
+          SERIAL_ECHO_F(offset, int(precision));
         }
         else {
           #ifdef SCAD_MESH_OUTPUT
@@ -166,7 +166,7 @@ void reset_bed_level() {
               SERIAL_CHAR(' ');
             SERIAL_ECHOPGM("NAN");
           #else
-            for (uint8_t i = 0; i < precision + 3; ++i)
+            LOOP_L_N(i, precision + 3)
               SERIAL_CHAR(i ? '=' : ' ');
           #endif
         }
@@ -188,7 +188,7 @@ void reset_bed_level() {
 
 #endif // AUTO_BED_LEVELING_BILINEAR || MESH_BED_LEVELING
 
-#if ANY(MESH_BED_LEVELING, PROBE_MANUALLY)
+#if EITHER(MESH_BED_LEVELING, PROBE_MANUALLY)
 
   void _manual_goto_xy(const xy_pos_t &pos) {
 

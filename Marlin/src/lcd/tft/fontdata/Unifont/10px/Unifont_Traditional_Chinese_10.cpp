@@ -20,11 +20,14 @@
  *
  */
 
-#include "../../fontdata.h"
+#include "../../../../../inc/MarlinConfigPre.h"
 
+#define UNIFONT 123
 #if HAS_GRAPHICAL_TFT && TFT_FONT == UNIFONT
 
-// Unifont Traditional Chinese 16pt, capital 'A' height: 10px, width: 100%, range: 0x22bf-0xff1a, glyphs: 307
+#include <stdint.h>
+
+// Unifont Traditional Chinese 16pt, capital 'A' heigth: 10px, width: 100%, range: 0x22bf-0xff1a, glyphs: 307
 extern const uint8_t Unifont_Traditional_Chinese_10[12033] = {
   161,10,191,34,26,255,14,254, // unifont_t
   // 0x22bf  ⊿

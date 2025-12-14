@@ -133,8 +133,8 @@ void LevelingBilinear::extrapolate_unprobed_bed_level() {
                       yend = ctry1;
   #endif
 
-  for (uint8_t xo = 0; xo <= xend; ++xo)
-    for (uint8_t yo = 0; yo <= yend; ++yo) {
+  LOOP_LE_N(xo, xend)
+    LOOP_LE_N(yo, yend) {
       uint8_t x2 = ctrx2 + xo, y2 = ctry2 + yo;
       #ifndef HALF_IN_X
         const uint8_t x1 = ctrx1 - xo;
@@ -229,10 +229,10 @@ void LevelingBilinear::print_leveling_grid(const bed_mesh_t* _z_values/*=nullptr
     ) * 0.5f;
   }
 
-  float LevelingBilinear::virt_2cmr(const uint8_t x, const uint8_t y, const float tx, const float ty) {
+  float LevelingBilinear::virt_2cmr(const uint8_t x, const uint8_t y, const_float_t tx, const_float_t ty) {
     float row[4], column[4];
-    for (uint8_t i = 0; i < 4; ++i) {
-      for (uint8_t j = 0; j < 4; ++j) {
+    LOOP_L_N(i, 4) {
+      LOOP_L_N(j, 4) {
         column[j] = virt_coord(i + x - 1, j + y - 1);
       }
       row[i] = virt_cmr(column, 1, ty);
@@ -243,10 +243,10 @@ void LevelingBilinear::print_leveling_grid(const bed_mesh_t* _z_values/*=nullptr
   void LevelingBilinear::subdivide_mesh() {
     grid_spacing_virt = grid_spacing / (BILINEAR_SUBDIVISIONS);
     grid_factor_virt = grid_spacing_virt.reciprocal();
-    for (uint8_t y = 0; y < GRID_MAX_POINTS_Y; ++y)
-      for (uint8_t x = 0; x < GRID_MAX_POINTS_X; ++x)
-        for (uint8_t ty = 0; ty < BILINEAR_SUBDIVISIONS; ++ty)
-          for (uint8_t tx = 0; tx < BILINEAR_SUBDIVISIONS; ++tx) {
+    LOOP_L_N(y, GRID_MAX_POINTS_Y)
+      LOOP_L_N(x, GRID_MAX_POINTS_X)
+        LOOP_L_N(ty, BILINEAR_SUBDIVISIONS)
+          LOOP_L_N(tx, BILINEAR_SUBDIVISIONS) {
             if ((ty && y == (GRID_MAX_POINTS_Y) - 1) || (tx && x == (GRID_MAX_POINTS_X) - 1))
               continue;
             z_values_virt[x * (BILINEAR_SUBDIVISIONS) + tx][y * (BILINEAR_SUBDIVISIONS) + ty] =
@@ -369,7 +369,7 @@ float LevelingBilinear::get_z_correction(const xy_pos_t &raw) {
    * Prepare a bilinear-leveled linear move on Cartesian,
    * splitting the move where it crosses grid borders.
    */
-  void LevelingBilinear::line_to_destination(const feedRate_t scaled_fr_mm_s, uint16_t x_splits, uint16_t y_splits) {
+  void LevelingBilinear::line_to_destination(const_feedRate_t scaled_fr_mm_s, uint16_t x_splits, uint16_t y_splits) {
     // Get current and destination cells for this line
     xy_int_t c1 { CELL_INDEX(x, current_position.x), CELL_INDEX(y, current_position.y) },
              c2 { CELL_INDEX(x, destination.x), CELL_INDEX(y, destination.y) };

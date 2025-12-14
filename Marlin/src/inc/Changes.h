@@ -30,9 +30,7 @@
 /**
  * Warnings for old configurations
  */
-#ifdef GITHUB_ACTION
-  // Skip change alerts during CI Test
-#elif WATCH_TEMP_PERIOD > 500
+#if WATCH_TEMP_PERIOD > 500
   #error "WATCH_TEMP_PERIOD now uses seconds instead of milliseconds."
 #elif DISABLED(THERMAL_PROTECTION_HOTENDS) && (defined(WATCH_TEMP_PERIOD) || defined(THERMAL_PROTECTION_PERIOD))
   #error "Thermal Runaway Protection for hotends is now enabled with THERMAL_PROTECTION_HOTENDS."
@@ -65,7 +63,7 @@
 #elif defined(ENDSTOPPULLUP_FIL_RUNOUT)
   #error "ENDSTOPPULLUP_FIL_RUNOUT is now FIL_RUNOUT_PULLUP."
 #elif defined(DISABLE_MAX_ENDSTOPS) || defined(DISABLE_MIN_ENDSTOPS)
-  #error "DISABLE_MAX_ENDSTOPS and DISABLE_MIN_ENDSTOPS deprecated. Endstops are automatically determined."
+  #error "DISABLE_MAX_ENDSTOPS and DISABLE_MIN_ENDSTOPS deprecated. Use individual USE_*_PLUG options instead."
 #elif defined(LANGUAGE_INCLUDE)
   #error "LANGUAGE_INCLUDE has been replaced by LCD_LANGUAGE."
 #elif defined(EXTRUDER_OFFSET_X) || defined(EXTRUDER_OFFSET_Y)
@@ -82,8 +80,6 @@
   #error "Z_ENDSTOP_SERVO_NR is now Z_PROBE_SERVO_NR."
 #elif defined(DEFAULT_XYJERK)
   #error "DEFAULT_XYJERK is deprecated. Use DEFAULT_XJERK and DEFAULT_YJERK instead."
-#elif defined(ALLOW_LOW_EJERK)
-  #error "ALLOW_LOW_EJERK is deprecated and should be removed."
 #elif defined(XY_TRAVEL_SPEED)
   #error "XY_TRAVEL_SPEED is now XY_PROBE_FEEDRATE."
 #elif defined(XY_PROBE_SPEED)
@@ -285,11 +281,11 @@
 #elif defined(MEASURED_LOWER_LIMIT) || defined(MEASURED_UPPER_LIMIT)
   #error "MEASURED_(UPPER|LOWER)_LIMIT is now FILWIDTH_ERROR_MARGIN."
 #elif defined(HAVE_TMCDRIVER)
-  #error "HAVE_TMCDRIVER is obsolete."
+  #error "HAVE_TMCDRIVER is now [AXIS]_DRIVER_TYPE TMC26X."
 #elif defined(STEALTHCHOP)
   #error "STEALTHCHOP is now STEALTHCHOP_(XY|Z|E)."
 #elif defined(HAVE_TMC26X)
-  #error "HAVE_TMC26X is now obsolete."
+  #error "HAVE_TMC26X is now [AXIS]_DRIVER_TYPE TMC26X."
 #elif defined(HAVE_TMC2130)
   #error "HAVE_TMC2130 is now [AXIS]_DRIVER_TYPE TMC2130."
 #elif defined(HAVE_TMC2208)
@@ -298,10 +294,10 @@
   #error "HAVE_L6470DRIVER is obsolete. L64xx stepper drivers are no longer supported in Marlin."
 #elif defined(X_IS_TMC) || defined(X2_IS_TMC) || defined(Y_IS_TMC) || defined(Y2_IS_TMC) || defined(Z_IS_TMC) || defined(Z2_IS_TMC) || defined(Z3_IS_TMC) \
    || defined(E0_IS_TMC) || defined(E1_IS_TMC) || defined(E2_IS_TMC) || defined(E3_IS_TMC) || defined(E4_IS_TMC) || defined(E5_IS_TMC) || defined(E6_IS_TMC) || defined(E7_IS_TMC)
-  #error "[AXIS]_IS_TMC is now obsolete."
+  #error "[AXIS]_IS_TMC is now [AXIS]_DRIVER_TYPE TMC26X."
 #elif defined(X_IS_TMC26X) || defined(X2_IS_TMC26X) || defined(Y_IS_TMC26X) || defined(Y2_IS_TMC26X) || defined(Z_IS_TMC26X) || defined(Z2_IS_TMC26X) || defined(Z3_IS_TMC26X) \
    || defined(E0_IS_TMC26X) || defined(E1_IS_TMC26X) || defined(E2_IS_TMC26X) || defined(E3_IS_TMC26X) || defined(E4_IS_TMC26X) || defined(E5_IS_TMC26X) || defined(E6_IS_TMC26X) || defined(E7_IS_TMC26X)
-  #error "[AXIS]_IS_TMC26X is now obsolete."
+  #error "[AXIS]_IS_TMC26X is now [AXIS]_DRIVER_TYPE TMC26X."
 #elif defined(X_IS_TMC2130) || defined(X2_IS_TMC2130) || defined(Y_IS_TMC2130) || defined(Y2_IS_TMC2130) || defined(Z_IS_TMC2130) || defined(Z2_IS_TMC2130) || defined(Z3_IS_TMC2130) \
    || defined(E0_IS_TMC2130) || defined(E1_IS_TMC2130) || defined(E2_IS_TMC2130) || defined(E3_IS_TMC2130) || defined(E4_IS_TMC2130) || defined(E5_IS_TMC2130) || defined(E6_IS_TMC2130) || defined(E7_IS_TMC2130)
   #error "[AXIS]_IS_TMC2130 is now [AXIS]_DRIVER_TYPE TMC2130."
@@ -468,7 +464,7 @@
 #elif defined(ANYCUBIC_LCD_SERIAL_PORT)
   #error "ANYCUBIC_LCD_SERIAL_PORT is now LCD_SERIAL_PORT."
 #elif defined(INTERNAL_SERIAL_PORT)
-  #error "INTERNAL_SERIAL_PORT is now MMU_SERIAL_PORT."
+  #error "INTERNAL_SERIAL_PORT is now MMU2_SERIAL_PORT."
 #elif defined(X_DUAL_ENDSTOPS_ADJUSTMENT) || defined(Y_DUAL_ENDSTOPS_ADJUSTMENT) || defined(Z_DUAL_ENDSTOPS_ADJUSTMENT)
   #error "[XYZ]_DUAL_ENDSTOPS_ADJUSTMENT is now [XYZ]2_ENDSTOP_ADJUSTMENT."
 #elif defined(Z_TRIPLE_ENDSTOPS_ADJUSTMENT2) || defined(Z_TRIPLE_ENDSTOPS_ADJUSTMENT3)
@@ -497,8 +493,6 @@
   #error "DIGIPOT_I2C is now DIGIPOT_MCP4451 (or DIGIPOT_MCP4018)."
 #elif defined(TOUCH_BUTTONS)
   #error "TOUCH_BUTTONS is now TOUCH_SCREEN."
-#elif defined(DISABLE_ENCODER)
-  #error "DISABLE_ENCODER is now NO_BACK_MENU_ITEM."
 #elif defined(LCD_FULL_PIXEL_HEIGHT) || defined(LCD_FULL_PIXEL_WIDTH)
   #error "LCD_FULL_PIXEL_(WIDTH|HEIGHT) is deprecated and should be removed."
 #elif defined(FSMC_UPSCALE)
@@ -583,18 +577,6 @@
   #error "Y_DUAL_STEPPER_DRIVERS is no longer needed and should be removed."
 #elif defined(NUM_Z_STEPPER_DRIVERS)
   #error "NUM_Z_STEPPER_DRIVERS is no longer needed and should be removed."
-#elif defined(SNMM)
-  #error "SNMM is obsolete. Define MMU_MODEL as PRUSA_MMU1 instead."
-#elif defined(MK2_MULTIPLEXER)
-  #error "MK2_MULTIPLEXER is obsolete. Define MMU_MODEL as PRUSA_MMU1 instead."
-#elif defined(PRUSA_MMU2)
-  #error "PRUSA_MMU2 is obsolete. Define MMU_MODEL as PRUSA_MMU2 instead."
-#elif defined(PRUSA_MMU2_S_MODE)
-  #error "PRUSA_MMU2_S_MODE is obsolete. Define MMU_MODEL as PRUSA_MMU2S instead."
-#elif defined(SMUFF_EMU_MMU2)
-  #error "SMUFF_EMU_MMU2 is obsolete. Define MMU_MODEL as EXTENDABLE_EMU_MMU2 instead."
-#elif defined(SMUFF_EMU_MMU2S)
-  #error "SMUFF_EMU_MMU2S is obsolete. Define MMU_MODEL as EXTENDABLE_EMU_MMU2S instead."
 #elif defined(LEVEL_BED_CORNERS)
   #error "LEVEL_BED_CORNERS is now LCD_BED_TRAMMING."
 #elif defined(LEVEL_CORNERS_INSET_LFRB) || defined(LEVEL_CORNERS_HEIGHT) || defined(LEVEL_CORNERS_Z_HOP) || defined(LEVEL_CORNERS_USE_PROBE) || defined(LEVEL_CORNERS_PROBE_TOLERANCE) || defined(LEVEL_CORNERS_VERIFY_RAISED) || defined(LEVEL_CORNERS_AUDIO_FEEDBACK)
@@ -602,9 +584,7 @@
 #elif defined(LEVEL_CENTER_TOO)
   #error "LEVEL_CENTER_TOO is now BED_TRAMMING_INCLUDE_CENTER."
 #elif defined(TOUCH_IDLE_SLEEP)
-  #error "TOUCH_IDLE_SLEEP (seconds) is now DISPLAY_SLEEP_MINUTES (minutes)."
-#elif defined(TOUCH_IDLE_SLEEP_MINS)
-  #error "TOUCH_IDLE_SLEEP_MINS is now DISPLAY_SLEEP_MINUTES."
+  #error "TOUCH_IDLE_SLEEP (seconds) is now TOUCH_IDLE_SLEEP_MINS (minutes)."
 #elif defined(LCD_BACKLIGHT_TIMEOUT)
   #error "LCD_BACKLIGHT_TIMEOUT (seconds) is now LCD_BACKLIGHT_TIMEOUT_MINS (minutes)."
 #elif defined(LCD_SET_PROGRESS_MANUALLY)
@@ -643,8 +623,6 @@
   #error "PROBE_PT_[123]_[XY] is now defined using PROBE_PT_[123] with an array { x, y }."
 #elif defined(SQUARE_WAVE_STEPPING)
   #error "SQUARE_WAVE_STEPPING is now EDGE_STEPPING."
-#elif defined(MINIMUM_STEPPER_PULSE)
-  #error "MINIMUM_STEPPER_PULSE (in µs) is now MINIMUM_STEPPER_PULSE_NS. Multiply old MINIMUM_STEPPER_PULSE x 1000!"
 #elif defined(FAN_PIN)
   #error "FAN_PIN is now FAN0_PIN."
 #elif defined(X_MIN_ENDSTOP_INVERTING) || defined(Y_MIN_ENDSTOP_INVERTING) || defined(Z_MIN_ENDSTOP_INVERTING) \
@@ -665,139 +643,13 @@
   #error "TFT_SHARED_SPI is now TFT_SHARED_IO."
 #elif defined(LCD_PINS_ENABLE)
   #error "LCD_PINS_ENABLE is now LCD_PINS_EN."
-#elif ANY(USE_XMIN_PLUG, USE_XMAX_PLUG, USE_YMIN_PLUG, USE_YMAX_PLUG, USE_ZMIN_PLUG, USE_ZMAX_PLUG, \
-          USE_IMIN_PLUG, USE_IMAX_PLUG, USE_JMIN_PLUG, USE_JMAX_PLUG, USE_KMIN_PLUG, USE_KMAX_PLUG, \
-          USE_UMIN_PLUG, USE_UMAX_PLUG, USE_VMIN_PLUG, USE_VMAX_PLUG, USE_WMIN_PLUG, USE_WMAX_PLUG)
-  #error "USE_*_PLUG settings are no longer needed and should be removed."
-#elif defined(X2_USE_ENDSTOP)
-  #error "X2_USE_ENDSTOP is obsolete. Instead set X2_STOP_PIN directly. (e.g., 'X2_USE_ENDSTOP _XMAX_' becomes 'X2_STOP_PIN X_MAX_PIN')"
-#elif defined(Y2_USE_ENDSTOP)
-  #error "Y2_USE_ENDSTOP is obsolete. Instead set Y2_STOP_PIN directly. (e.g., 'Y2_USE_ENDSTOP _YMAX_' becomes 'Y2_STOP_PIN Y_MAX_PIN')"
-#elif defined(Z2_USE_ENDSTOP)
-  #error "Z2_USE_ENDSTOP is obsolete. Instead set Z2_STOP_PIN directly. (e.g., 'Z2_USE_ENDSTOP _ZMAX_' becomes 'Z2_STOP_PIN Z_MAX_PIN')"
-#elif defined(Z3_USE_ENDSTOP)
-  #error "Z3_USE_ENDSTOP is obsolete. Instead set Z3_STOP_PIN directly. (e.g., 'Z3_USE_ENDSTOP _ZMAX_' becomes 'Z3_STOP_PIN Z_MAX_PIN')"
-#elif defined(Z4_USE_ENDSTOP)
-  #error "Z4_USE_ENDSTOP is obsolete. Instead set Z4_STOP_PIN directly. (e.g., 'Z4_USE_ENDSTOP _ZMAX_' becomes 'Z4_STOP_PIN Z_MAX_PIN')"
-#elif defined(INTEGRATED_BABYSTEPPING)
-  #error "INTEGRATED_BABYSTEPPING is no longer needed and should be removed."
-#elif defined(FOLDER_SORTING)
-  #error "FOLDER_SORTING is now SDSORT_FOLDERS."
-#elif defined(BTT_MINI_12864_V1)
-  #error "BTT_MINI_12864_V1 is now BTT_MINI_12864."
-#elif defined(Z_PROBE_OFFSET_RANGE_MIN) || defined(Z_PROBE_OFFSET_RANGE_MAX)
-  #error "Z_PROBE_OFFSET_RANGE_(MIN|MAX) is now PROBE_OFFSET_Z(MIN|MAX)."
-#elif defined(LARGE_MOVE_ITEMS)
-  #error "LARGE_MOVE_ITEMS is obsolete. Instead define MANUAL_MOVE_DISTANCE_MM and MANUAL_MOVE_DISTANCE_IN."
-#elif defined(SDIO_SUPPORT)
-  #error "SDIO_SUPPORT is now ONBOARD_SDIO."
-#elif defined(ANET_FULL_GRAPHICS_LCD_ALT_WIRING)
-  #error "ANET_FULL_GRAPHICS_LCD_ALT_WIRING is now CTC_A10S_A13."
-#elif defined(Z_PROBE_END_SCRIPT)
-  #error "Z_PROBE_END_SCRIPT is now EVENT_GCODE_AFTER_G29."
-#elif defined(WIFI_SERIAL)
-  #error "WIFI_SERIAL is now WIFI_SERIAL_PORT."
-#elif defined(CALIBRATION_MEASUREMENT_RESOLUTION)
-  #error "CALIBRATION_MEASUREMENT_RESOLUTION is no longer needed and should be removed."
-#elif defined(MMU2_MENUS)
-  #error "MMU2_MENUS is now MMU_MENUS."
-#elif defined(MMU2_SERIAL_PORT)
-  #error "MMU2_SERIAL_PORT is now MMU_SERIAL_PORT."
-#elif defined(MMU2_RST_PIN)
-  #error "MMU2_RST_PIN is now MMU_RST_PIN."
-#elif defined(MMU2_MAX_RETRIES)
-  #error "MMU2_MAX_RETRIES is now MMU3_MAX_RETRIES."
-#elif defined(MMU2_FILAMENT_SENSOR_POSITION)
-  #error "MMU2_FILAMENT_SENSOR_POSITION is now MMU3_FILAMENT_SENSOR_POSITION."
-#elif defined(MMU2_TOOL_CHANGE_LOAD_LENGTH)
-  #error "MMU2_TOOL_CHANGE_LOAD_LENGTH is now MMU3_TOOL_CHANGE_LOAD_LENGTH."
-#elif defined(MMU2_LOAD_TO_NOZZLE_FEED_RATE)
-  #error "MMU2_LOAD_TO_NOZZLE_FEED_RATE is now MMU3_LOAD_TO_NOZZLE_FEED_RATE."
-#elif defined(MMU2_UNLOAD_TO_FINDA_FEED_RATE)
-  #error "MMU2_UNLOAD_TO_FINDA_FEED_RATE is no longer needed and should be removed."
-#elif defined(MMU2_VERIFY_LOAD_TO_NOZZLE_FEED_RATE)
-  #error "MMU2_VERIFY_LOAD_TO_NOZZLE_FEED_RATE is now MMU3_VERIFY_LOAD_TO_NOZZLE_FEED_RATE."
-#elif defined(MMU2_RETRY_UNLOAD_TO_FINDA_LENGTH)
-  #error "MMU2_RETRY_UNLOAD_TO_FINDA_LENGTH is now MMU3_RETRY_UNLOAD_TO_FINDA_LENGTH."
-#elif defined(MMU2_RETRY_UNLOAD_TO_FINDA_FEED_RATE)
-  #error "MMU2_RETRY_UNLOAD_TO_FINDA_FEED_RATE is now MMU3_RETRY_UNLOAD_TO_FINDA_FEED_RATE."
-#elif defined(MMU2_FILAMENT_SENSOR_POSITION)
-  #error "MMU2_FILAMENT_SENSOR_POSITION is now MMU3_FILAMENT_SENSOR_E_POSITION."
-#elif defined(MMU2_CHECK_FILAMENT_PRESENCE_EXTRUSION_LENGTH)
-  #error "MMU2_CHECK_FILAMENT_PRESENCE_EXTRUSION_LENGTH is now MMU3_CHECK_FILAMENT_PRESENCE_EXTRUSION_LENGTH."
-#elif defined(MMU_HAS_CUTTER)
-  #error "MMU_HAS_CUTTER is now MMU3_HAS_CUTTER."
-#elif defined(MMU_FORCE_STEALTH_MODE)
-  #error "MMU_FORCE_STEALTH_MODE is obsolete and should be removed."
-#elif defined(MMU_SPOOL_JOIN_CONSUMES_ALL_FILAMENT)
-  #error "MMU_SPOOL_JOIN_CONSUMES_ALL_FILAMENT is now MMU3_SPOOL_JOIN_CONSUMES_ALL_FILAMENT."
-#elif HAS_PRUSA_MMU3 && defined(MMU2_LOAD_TO_NOZZLE_SEQUENCE)
-  #error "MMU2_LOAD_TO_NOZZLE_SEQUENCE is now MMU3_LOAD_TO_NOZZLE_SEQUENCE for MMU_MODEL MMU3."
-#elif HAS_PRUSA_MMU3 && defined(MMU2_RAMMING_SEQUENCE)
-  #error "MMU2_RAMMING_SEQUENCE is now MMU3_RAMMING_SEQUENCE for MMU_MODEL MMU3."
-#elif defined(MMU_EXTRUDER_SENSOR)
-  #error "MMU_EXTRUDER_SENSOR is now MMU2_EXTRUDER_SENSOR."
-#elif defined(MMU_LOADING_ATTEMPTS_NR)
-  #error "MMU_LOADING_ATTEMPTS_NR is now MMU2_LOADING_ATTEMPTS_NR."
-#elif defined(MMU2_DEBUG)
-  #error "MMU2_DEBUG is now MMU_DEBUG."
-#elif defined(FTM_SHAPING_DEFAULT_X_FREQ) || defined(FTM_SHAPING_DEFAULT_Y_FREQ)
-  #error "FTM_SHAPING_DEFAULT_[XY]_FREQ is now FTM_SHAPING_DEFAULT_FREQ_[XY]."
-#elif defined(SDSS)
-  #error "SDSS is now SD_SS_PIN."
-#elif defined(FTM_LINEAR_ADV_DEFAULT_ENA)
-  #error "FTM_LINEAR_ADV_DEFAULT_ENA is obsolete and should be removed."
-#elif defined(FTM_LINEAR_ADV_DEFAULT_K)
-  #error "FTM_LINEAR_ADV_DEFAULT_K is now set with ADVANCE_K and should be removed."
-#elif defined(DEFAULT_Kp_LIST) || defined(DEFAULT_Ki_LIST) || defined(DEFAULT_Kd_LIST)
-  #error "DEFAULT_Kp_LIST, DEFAULT_Ki_LIST, DEFAULT_Kd_LIST are now (uppercase) DEFAULT_KP_LIST, DEFAULT_KI_LIST, DEFAULT_KD_LIST."
-#elif defined(DEFAULT_Kp) || defined(DEFAULT_Ki) || defined(DEFAULT_Kd)
-  #error "DEFAULT_Kp, DEFAULT_Ki, DEFAULT_Kd are now (uppercase) DEFAULT_KP, DEFAULT_KI, DEFAULT_KD."
-#elif defined(DEFAULT_bedKp) || defined(DEFAULT_bedKi) || defined(DEFAULT_bedKd)
-  #error "DEFAULT_bedKp, DEFAULT_bedKi, DEFAULT_bedKd are now DEFAULT_BED_KP, DEFAULT_BED_KI, DEFAULT_BED_KD."
-#elif defined(DEFAULT_chamberKp) || defined(DEFAULT_chamberKi) || defined(DEFAULT_chamberKd)
-  #error "DEFAULT_chamberKp, DEFAULT_chamberKi, DEFAULT_chamberKd are now DEFAULT_CHAMBER_KP, DEFAULT_CHAMBER_KI, DEFAULT_CHAMBER_KD."
-#elif defined(DEFAULT_Kc)
-  #error "DEFAULT_Kc is now (uppercase) DEFAULT_KC."
-#elif defined(DEFAULT_Kf)
-  #error "DEFAULT_Kf is now (uppercase) DEFAULT_KF."
 #endif
-
-// SDSS renamed to SD_SS_PIN
-#undef SDSS
-#define SDSS 8675309
-#if USB_CS_PIN == SDSS
-  #error "SDSS is now SD_SS_PIN."
-#endif
-#undef SDSS
-
-// Changes to Probe Temp Compensation (#17392)
-#if HAS_PTC && TEMP_SENSOR_PROBE && TEMP_SENSOR_BED
-  #if defined(PTC_PARK_POS_X) || defined(PTC_PARK_POS_Y) || defined(PTC_PARK_POS_Z)
-    #error "PTC_PARK_POS_[XYZ] is now PTC_PARK_POS (array)."
-  #elif defined(PTC_PROBE_POS_X) || defined(PTC_PROBE_POS_Y)
-    #error "PTC_PROBE_POS_[XY] is now PTC_PROBE_POS (array)."
-  #endif
-#endif
-
-// Consolidate TMC26X, validate migration (#24373)
-#define _ISMAX(A) defined(A##_MAX_CURRENT) ||
-#define _ISSNS(A) defined(A##_SENSE_RESISTOR) ||
-#if MAP(_ISMAX, ALL_AXIS_NAMES) 0
-  #error "*_MAX_CURRENT is now set with *_CURRENT."
-#elif MAP(_ISSNS, ALL_AXIS_NAMES) 0
-  #error "*_SENSE_RESISTOR (in Milli-Ohms) is now set with *_RSENSE (in Ohms), so you must divide values by 1000."
-#endif
-#undef _ISMAX
-#undef _ISSNS
 
 // L64xx stepper drivers have been removed
 #define _L6470              0x6470
 #define _L6474              0x6474
 #define _L6480              0x6480
 #define _POWERSTEP01        0xF00D
-#define _TMC26X             0x2600
-#define _TMC26X_STANDALONE  0x2601
 #if HAS_DRIVER(L6470)
   #error "L6470 stepper drivers are no longer supported in Marlin."
 #elif HAS_DRIVER(L6474)
@@ -806,40 +658,8 @@
   #error "L6480 stepper drivers are no longer supported in Marlin."
 #elif HAS_DRIVER(POWERSTEP01)
   #error "POWERSTEP01 stepper drivers are no longer supported in Marlin."
-#elif HAS_DRIVER(TMC26X) || HAS_DRIVER(TMC26X_STANDALONE)
-  #error "TMC26X stepper drivers are no longer supported in Marlin."
 #endif
 #undef _L6470
 #undef _L6474
 #undef _L6480
 #undef _POWERSTEP01
-#undef _TMC26X
-#undef _TMC26X_STANDALONE
-
-#if ENABLED(MULTI_VOLUME)
-  // Change to a generic ID without SV_ prefix
-  #define SV_SD_ONBOARD      201
-  #define SV_USB_FLASH_DRIVE 202
-  #if DEFAULT_VOLUME_IS(SV_SD_ONBOARD) || SHARED_VOLUME_IS(SV_SD_ONBOARD)
-    #error "SV_SD_ONBOARD is now SD_ONBOARD."
-  #elif DEFAULT_VOLUME_IS(SV_USB_FLASH_DRIVE) || SHARED_VOLUME_IS(SV_USB_FLASH_DRIVE)
-    #error "SV_USB_FLASH_DRIVE is now USB_FLASH_DRIVE."
-  #endif
-  // Skip less clear "bad value" errors in inc/SanityCheck.h
-  #if DEFAULT_VOLUME_IS(SV_SD_ONBOARD)
-    #undef DEFAULT_VOLUME
-    #define DEFAULT_VOLUME SD_ONBOARD
-  #elif DEFAULT_VOLUME_IS(SV_USB_FLASH_DRIVE)
-    #undef DEFAULT_VOLUME
-    #define DEFAULT_VOLUME USB_FLASH_DRIVE
-  #endif
-  #if SHARED_VOLUME_IS(SV_SD_ONBOARD)
-    #undef DEFAULT_SHARED_VOLUME
-    #define DEFAULT_SHARED_VOLUME SD_ONBOARD
-  #elif SHARED_VOLUME_IS(SV_USB_FLASH_DRIVE)
-    #undef DEFAULT_SHARED_VOLUME
-    #define DEFAULT_SHARED_VOLUME USB_FLASH_DRIVE
-  #endif
-  #undef SV_SD_ONBOARD
-  #undef SV_USB_FLASH_DRIVE
-#endif

@@ -23,7 +23,7 @@
 
 /**
  * MegaTronics v3.0 / v3.1 / v3.2 pin assignments
- * Schematic: https://github.com/brupje/Megatronics_3/blob/master/Design%20Files/megatronics.sch
+ * Schematic Origin: https://github.com/brupje/Megatronics_3/blob/master/Design%20Files/megatronics.sch
  * ATmega2560
  */
 
@@ -135,7 +135,7 @@
 //
 // Misc. Functions
 //
-#define SD_SS_PIN                             53
+#define SDSS                                  53
 #define LED_PIN                               13
 #define PS_ON_PIN                             12
 

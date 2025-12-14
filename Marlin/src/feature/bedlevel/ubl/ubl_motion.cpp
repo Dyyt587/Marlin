@@ -32,6 +32,7 @@
   #include "../../../module/delta.h"
 #endif
 
+#include "../../../MarlinCore.h"
 #include <math.h>
 
 //#define DEBUG_UBL_MOTION
@@ -46,7 +47,7 @@
   //       corners of cells. To fix the issue, simply check if the start/end of the line
   //       is very close to a cell boundary in advance and don't split the line there.
 
-  void unified_bed_leveling::line_to_destination_cartesian(const feedRate_t scaled_fr_mm_s, const uint8_t extruder) {
+  void unified_bed_leveling::line_to_destination_cartesian(const_feedRate_t scaled_fr_mm_s, const uint8_t extruder) {
     /**
      * Much of the nozzle movement will be within the same cell. So we will do as little computation
      * as possible to determine if this is the case. If this move is within the same cell, we will
@@ -60,7 +61,7 @@
       const xyze_pos_t &start = current_position, &end = destination;
     #endif
 
-    const xy_uint8_t istart = cell_indexes(start), iend = cell_indexes(end);
+    const xy_int8_t istart = cell_indexes(start), iend = cell_indexes(end);
 
     // A move within the same cell needs no splitting
     if (istart == iend) {
@@ -107,7 +108,7 @@
 
     const xy_float_t dist = end - start;
     const xy_bool_t neg { dist.x < 0, dist.y < 0 };
-    const xy_uint8_t ineg { uint8_t(neg.x), uint8_t(neg.y) };
+    const xy_int8_t ineg { int8_t(neg.x), int8_t(neg.y) };
     const xy_float_t sign { neg.x ? -1.0f : 1.0f, neg.y ? -1.0f : 1.0f };
     const xy_int8_t iadd { int8_t(iend.x == istart.x ? 0 : sign.x), int8_t(iend.y == istart.y ? 0 : sign.y) };
 
@@ -130,7 +131,7 @@
       const bool inf_normalized_flag = isinf(e_normalized_dist);
     #endif
 
-    xy_uint8_t icell = istart;
+    xy_int8_t icell = istart;
 
     const float ratio = dist.y / dist.x,        // Allow divide by zero
                 c = start.y - ratio * start.x;
@@ -251,7 +252,7 @@
      * Generic case of a line crossing both X and Y Mesh lines.
      */
 
-    xy_uint8_t cnt = istart.diff(iend);
+    xy_int8_t cnt = (istart - iend).ABS();
 
     icell += ineg;
 
@@ -350,7 +351,7 @@
    * Returns true if did NOT move, false if moved (requires current_position update).
    */
 
-  bool __O2 unified_bed_leveling::line_to_destination_segmented(const feedRate_t scaled_fr_mm_s) {
+  bool __O2 unified_bed_leveling::line_to_destination_segmented(const_feedRate_t scaled_fr_mm_s) {
 
     if (!position_is_reachable(destination))  // fail if moving outside reachable boundary
       return true;                            // did not move, so current_position still accurate

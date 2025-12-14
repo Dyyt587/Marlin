@@ -30,7 +30,7 @@
 
 #include "leds.h"
 
-#if ANY(NEOPIXEL_STARTUP_TEST, NEOPIXEL2_STARTUP_TEST)
+#if EITHER(NEOPIXEL_STARTUP_TEST, NEOPIXEL2_STARTUP_TEST)
   #include "../../core/utility.h"
 #endif
 
@@ -103,7 +103,7 @@ void Marlin_NeoPixel::init() {
     safe_delay(500);
     set_color_startup(adaneo1.Color(0, 0, 255, 0));  // blue
     safe_delay(500);
-    #if HAS_WHITE_NEOPIXEL_1
+    #if HAS_WHITE_LED
       set_color_startup(adaneo1.Color(0, 0, 0, 255));  // white
       safe_delay(500);
     #endif
@@ -158,7 +158,7 @@ void Marlin_NeoPixel::init() {
       safe_delay(500);
       set_color_startup(adaneo.Color(0, 0, 255, 0));  // blue
       safe_delay(500);
-      #if HAS_WHITE_NEOPIXEL_2
+      #if HAS_WHITE_LED2
         set_color_startup(adaneo.Color(0, 0, 0, 255));  // white
         safe_delay(500);
       #endif

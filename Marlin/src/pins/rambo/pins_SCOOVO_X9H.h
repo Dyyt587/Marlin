@@ -114,7 +114,7 @@
 //
 // Misc. Functions
 //
-#define SD_SS_PIN                             53
+#define SDSS                                  53
 #define LED_PIN                               13
 #define PS_ON_PIN                              4
 
@@ -143,7 +143,7 @@
 
 #define HOME_PIN                        BTN_HOME
 
-#if ANY(VIKI2, miniVIKI)
+#if EITHER(VIKI2, miniVIKI)
   #define BEEPER_PIN                          44
   // Pins for DOGM SPI LCD Support
   #define DOGLCD_A0                           70

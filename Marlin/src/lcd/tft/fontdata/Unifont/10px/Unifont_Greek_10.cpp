@@ -20,11 +20,14 @@
  *
  */
 
-#include "../../fontdata.h"
+#include "../../../../../inc/MarlinConfigPre.h"
 
+#define UNIFONT 123
 #if HAS_GRAPHICAL_TFT && TFT_FONT == UNIFONT
 
-// Unifont Greek 16pt, capital 'A' height: 10px, width: 100%, range: 0x0386-0x03ce, glyphs: 63
+#include <stdint.h>
+
+// Unifont Greek 16pt, capital 'A' heigth: 10px, width: 100%, range: 0x0386-0x03ce, glyphs: 63
 extern const uint8_t Unifont_Greek_10[1061] = {
   129,10,134,3,206,3,14,254, // unifont_t
   // 0x0386  Ά

@@ -31,6 +31,10 @@
   millis_t chdk_timeout; // = 0
 #endif
 
+#if defined(PHOTO_POSITION) && PHOTO_DELAY_MS > 0
+  #include "../../../MarlinCore.h" // for idle()
+#endif
+
 #ifdef PHOTO_RETRACT_MM
 
   #define _PHOTO_RETRACT_MM (PHOTO_RETRACT_MM + 0)
@@ -43,7 +47,7 @@
   #endif
 
   #ifdef PHOTO_RETRACT_MM
-    inline void e_move_m240(const float length, const feedRate_t fr_mm_s) {
+    inline void e_move_m240(const float length, const_feedRate_t fr_mm_s) {
       if (length && thermalManager.hotEnoughToExtrude(active_extruder))
         unscaled_e_move(length, fr_mm_s);
     }
@@ -80,7 +84,7 @@
 
     inline void spin_photo_pin() {
       static constexpr uint32_t sequence[] = PHOTO_PULSES_US;
-      for (uint8_t i = 0; i < COUNT(sequence); ++i)
+      LOOP_L_N(i, COUNT(sequence))
         pulse_photo_pin(sequence[i], !(i & 1));
     }
 
@@ -107,7 +111,7 @@
  *    B - Y offset to the return position
  *    F - Override the XY movement feedrate
  *    R - Retract/recover length (current units)
- *    S - Retract/recover feedrate (mm/min)
+ *    S - Retract/recover feedrate (mm/m)
  *    X - Move to X before triggering the shutter
  *    Y - Move to Y before triggering the shutter
  *    Z - Raise Z by a distance before triggering the shutter
@@ -181,7 +185,7 @@ void GcodeSuite::M240() {
   #ifdef PHOTO_POSITION
     #if PHOTO_DELAY_MS > 0
       const millis_t timeout = millis() + parser.intval('P', PHOTO_DELAY_MS);
-      while (PENDING(millis(), timeout)) marlin.idle();
+      while (PENDING(millis(), timeout)) idle();
     #endif
     do_blocking_move_to(old_pos, fr_mm_s);
     #ifdef PHOTO_RETRACT_MM

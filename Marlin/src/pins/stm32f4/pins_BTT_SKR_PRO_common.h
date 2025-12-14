@@ -23,14 +23,14 @@
 
 #include "env_validate.h"
 
-#define USES_DIAG_PINS
+#define USES_DIAG_JUMPERS
 
 // If you have the BigTreeTech driver expansion module, enable BTT_MOTOR_EXPANSION
 // https://github.com/bigtreetech/BTT-Expansion-module/tree/master/BTT%20EXP-MOT
 //#define BTT_MOTOR_EXPANSION
 
-#if ALL(HAS_WIRED_LCD, BTT_MOTOR_EXPANSION)
-  #if ANY(CR10_STOCKDISPLAY, ENDER2_STOCKDISPLAY)
+#if BOTH(HAS_WIRED_LCD, BTT_MOTOR_EXPANSION)
+  #if EITHER(CR10_STOCKDISPLAY, ENDER2_STOCKDISPLAY)
     #define EXP_MOT_USE_EXP2_ONLY 1
   #else
     #error "You can't use both an LCD and a Motor Expansion Module on EXP1/EXP2 at the same time."
@@ -70,25 +70,47 @@
 //
 // Limit Switches
 //
-#define X_STOP_PIN                    X_DIAG_PIN  // X-
-#define Y_STOP_PIN                    Y_DIAG_PIN  // Y-
-#define Z_STOP_PIN                    Z_DIAG_PIN  // Z-
-#define X_OTHR_PIN                          PE15  // E0
-#define Y_OTHR_PIN                          PE10  // E1
-#define Z_OTHR_PIN                          PG5   // E2
+#ifdef X_STALL_SENSITIVITY
+  #define X_STOP_PIN                  X_DIAG_PIN
+  #if X_HOME_TO_MIN
+    #define X_MAX_PIN                       PE15  // E0
+  #else
+    #define X_MIN_PIN                       PE15  // E0
+  #endif
+#else
+  #define X_MIN_PIN                         PB10  // X-
+  #define X_MAX_PIN                         PE15  // E0
+#endif
+
+#ifdef Y_STALL_SENSITIVITY
+  #define Y_STOP_PIN                  Y_DIAG_PIN
+  #if Y_HOME_TO_MIN
+    #define Y_MAX_PIN                       PE10  // E1
+  #else
+    #define Y_MIN_PIN                       PE10  // E1
+  #endif
+#else
+  #define Y_MIN_PIN                         PE12  // Y-
+  #define Y_MAX_PIN                         PE10  // E1
+#endif
+
+#ifdef Z_STALL_SENSITIVITY
+  #define Z_STOP_PIN                  Z_DIAG_PIN
+  #if Z_HOME_TO_MIN
+    #define Z_MAX_PIN                       PG5   // E2
+  #else
+    #define Z_MIN_PIN                       PG5   // E2
+  #endif
+#else
+  #define Z_MIN_PIN                         PG8   // Z-
+  #define Z_MAX_PIN                         PG5   // E2
+#endif
 
 //
 // Z Probe must be this pin
 //
 #ifndef Z_MIN_PROBE_PIN
   #define Z_MIN_PROBE_PIN                   PA2
-#endif
-
-//
-// Probe enable
-//
-#if ENABLED(PROBE_ENABLE_DISABLE) && !defined(PROBE_ENABLE_PIN)
-  #define PROBE_ENABLE_PIN            SERVO0_PIN
 #endif
 
 //
@@ -182,18 +204,26 @@
   //#define E4_HARDWARE_SERIAL Serial1
 
   #define X_SERIAL_TX_PIN                   PC13
+  #define X_SERIAL_RX_PIN        X_SERIAL_TX_PIN
+
   #define Y_SERIAL_TX_PIN                   PE3
+  #define Y_SERIAL_RX_PIN        Y_SERIAL_TX_PIN
+
   #define Z_SERIAL_TX_PIN                   PE1
+  #define Z_SERIAL_RX_PIN        Z_SERIAL_TX_PIN
+
   #define E0_SERIAL_TX_PIN                  PD4
+  #define E0_SERIAL_RX_PIN      E0_SERIAL_TX_PIN
+
   #define E1_SERIAL_TX_PIN                  PD1
+  #define E1_SERIAL_RX_PIN      E1_SERIAL_TX_PIN
+
   #define E2_SERIAL_TX_PIN                  PD6
+  #define E2_SERIAL_RX_PIN      E2_SERIAL_TX_PIN
 
   // Reduce baud rate to improve software serial reliability
-  #ifndef TMC_BAUD_RATE
-    #define TMC_BAUD_RATE                  19200
-  #endif
-
-#endif // HAS_TMC_UART
+  #define TMC_BAUD_RATE                    19200
+#endif
 
 //
 // Temperature Sensors
@@ -314,7 +344,7 @@
 #if SD_CONNECTION_IS(LCD)
 
   #define SD_DETECT_PIN              EXP2_07_PIN
-  #define SD_SS_PIN                  EXP2_04_PIN
+  #define SDSS                       EXP2_04_PIN
 
 #elif SD_CONNECTION_IS(ONBOARD)
 
@@ -323,7 +353,7 @@
   // function with Hardware SPI. This is not currently configurable in the HAL,
   // so force Software SPI to work around this issue.
   #define SOFTWARE_SPI
-  #define SD_SS_PIN                         PA4
+  #define SDSS                              PA4
   #define SD_SCK_PIN                        PA5
   #define SD_MISO_PIN                       PA6
   #define SD_MOSI_PIN                       PB5
@@ -355,6 +385,7 @@
     #define E3_CS_PIN                EXP1_06_PIN
     #if HAS_TMC_UART
       #define E3_SERIAL_TX_PIN       EXP1_06_PIN
+      #define E3_SERIAL_RX_PIN       EXP1_06_PIN
     #endif
   #endif
 
@@ -367,6 +398,7 @@
     #define E4_CS_PIN                EXP1_04_PIN
     #if HAS_TMC_UART
       #define E4_SERIAL_TX_PIN       EXP1_04_PIN
+      #define E4_SERIAL_RX_PIN       EXP1_04_PIN
     #endif
   #else
     #define E4_ENABLE_PIN            EXP2_07_PIN
@@ -381,6 +413,7 @@
     #define E5_CS_PIN                EXP1_02_PIN
     #if HAS_TMC_UART
       #define E5_SERIAL_TX_PIN       EXP1_02_PIN
+      #define E5_SERIAL_RX_PIN       EXP1_02_PIN
     #endif
   #else
     #define E5_ENABLE_PIN            EXP2_07_PIN
@@ -389,9 +422,8 @@
 #endif // BTT_MOTOR_EXPANSION
 
 //
-// LCD / Controller
+// LCDs and Controllers
 //
-
 #if IS_TFTGLCD_PANEL
 
   #if ENABLED(TFTGLCD_PANEL_SPI)
@@ -422,7 +454,9 @@
 
   #elif ENABLED(WYH_L12864)
 
-    CONTROLLER_WARNING("BTT_SKR_PRO_common", "WYH_L12864")
+    #ifndef NO_CONTROLLER_CUSTOM_WIRING_WARNING
+      #error "CAUTION! WYH_L12864 requires wiring modifications. See 'pins_BTT_SKR_PRO_common.h' for details. (Define NO_CONTROLLER_CUSTOM_WIRING_WARNING to suppress this warning.)"
+    #endif
 
     /**
      * 1. Cut the tab off the LCD connector so it can be plugged into the "EXP1" connector the other way.
@@ -468,7 +502,7 @@
       #define DOGLCD_A0              EXP1_04_PIN
       //#define LCD_BACKLIGHT_PIN           -1
       #define LCD_RESET_PIN          EXP1_05_PIN  // Must be high or open for LCD to operate normally.
-      #if ANY(FYSETC_MINI_12864_1_2, FYSETC_MINI_12864_2_0)
+      #if EITHER(FYSETC_MINI_12864_1_2, FYSETC_MINI_12864_2_0)
         #ifndef RGB_LED_R_PIN
           #define RGB_LED_R_PIN      EXP1_06_PIN
         #endif
@@ -481,15 +515,17 @@
       #elif ENABLED(FYSETC_MINI_12864_2_1)
         #define NEOPIXEL_PIN         EXP1_06_PIN
       #endif
-    #endif // FYSETC_MINI_12864
+    #endif // !FYSETC_MINI_12864
 
     #if IS_ULTIPANEL
       #define LCD_PINS_D5            EXP1_06_PIN
       #define LCD_PINS_D6            EXP1_07_PIN
       #define LCD_PINS_D7            EXP1_08_PIN
+
       #if ENABLED(REPRAP_DISCOUNT_FULL_GRAPHIC_SMART_CONTROLLER)
         #define BTN_ENC_EN           LCD_PINS_D7  // Detect the presence of the encoder
       #endif
+
     #endif
 
   #endif

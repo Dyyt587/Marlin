@@ -39,7 +39,8 @@
 
 /**
  * Rambo pin assignments
- * Schematic (1.1b): https://www.reprap.org/wiki/File:Rambo1-1-schematic.png
+ * Schematic (1.1b): https://green-candy.osdn.jp/external/MarlinFW/board_schematics/RAMBo/Rambo1-1-schematic.png
+ * Origin (1.1b): https://www.reprap.org/wiki/File:Rambo1-1-schematic.png
  */
 
 #include "env_validate.h"
@@ -152,7 +153,7 @@
 //
 // Misc. Functions
 //
-#define SD_SS_PIN                             53
+#define SDSS                                  53
 #define LED_PIN                               13
 #define PS_ON_PIN                              4
 
@@ -167,11 +168,9 @@
 //
 // M3/M4/M5 - Spindle/Laser Control
 //
-#if HAS_CUTTER
-  #define SPINDLE_LASER_PWM_PIN               45  // Hardware PWM
-  #define SPINDLE_LASER_ENA_PIN               31  // Pullup!
-  #define SPINDLE_DIR_PIN                     32
-#endif
+#define SPINDLE_LASER_PWM_PIN                 45  // Hardware PWM
+#define SPINDLE_LASER_ENA_PIN                 31  // Pullup!
+#define SPINDLE_DIR_PIN                       32
 
 //
 // SPI for MAX Thermocouple
@@ -198,7 +197,6 @@
 //
 // LCD / Controller
 //
-
 #if HAS_WIRED_LCD || TOUCH_UI_ULTIPANEL
 
   #define KILL_PIN                            80
@@ -212,7 +210,7 @@
     #define LCD_PINS_D6                       74
     #define LCD_PINS_D7                       75
 
-    #if ANY(VIKI2, miniVIKI)
+    #if EITHER(VIKI2, miniVIKI)
       #define BEEPER_PIN                      44
       // NB: Panucatt's Viki 2.0 wiring diagram (v1.2) indicates that the
       //     beeper/buzzer is connected to pin 33; however, the pin used in the
@@ -232,7 +230,7 @@
 
       #define LCD_SCREEN_ROTATE              180  // 0, 90, 180, 270
 
-    #else // !VIKI2 && !miniVIKI
+    #else                                         // !VIKI2 && !miniVIKI
 
       #define BEEPER_PIN                      79  // AUX-4
 
@@ -253,7 +251,7 @@
       #define BTN_ENC_EN             LCD_PINS_D7  // Detect the presence of the encoder
     #endif
 
-  #else // !IS_NEWPANEL - old style panel with shift register
+  #else                                           // !IS_NEWPANEL - old style panel with shift register
 
     // No Beeper added
     #define BEEPER_PIN                        33

@@ -1,9 +1,7 @@
 /**
  * Marlin 3D Printer Firmware
  * Copyright (c) 2020 MarlinFirmware [https://github.com/MarlinFirmware/Marlin]
- *
- * Based on Sprinter and grbl.
- * Copyright (c) 2011 Camiel Gubbels / Erik van der Zalm
+ * Copyright (c) 2016 Bob Cousins bobcousins42@googlemail.com
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,11 +35,11 @@
 #include "i2s.h"
 
 #if ENABLED(WIFISUPPORT)
-  #include "wifi/WebSocketSerial.h"
+  #include "WebSocketSerial.h"
 #endif
 
 #if ENABLED(ESP3D_WIFISUPPORT)
-  #include <esp3dlib.h>
+  #include "esp3dlib.h"
 #endif
 
 #include "FlushableHardwareSerial.h"
@@ -64,10 +62,10 @@
 #define CRITICAL_SECTION_END()   portEXIT_CRITICAL(&hal.spinlock)
 
 #define HAL_CAN_SET_PWM_FREQ   // This HAL supports PWM Frequency adjustment
-#define PWM_FREQUENCY  1000U   // Default PWM frequency when set_pwm_duty() is called without set_pwm_frequency()
-#define PWM_RESOLUTION   10U   // Default PWM bit resolution
-#define CHANNEL_MAX_NUM  15U   // max PWM channel # to allocate (7 to only use low speed, 15 to use low & high)
-#define MAX_PWM_IOPIN    33U   // hardware pwm pins < 34
+#define PWM_FREQUENCY  1000u   // Default PWM frequency when set_pwm_duty() is called without set_pwm_frequency()
+#define PWM_RESOLUTION   10u   // Default PWM bit resolution
+#define CHANNEL_MAX_NUM  15u   // max PWM channel # to allocate (7 to only use low speed, 15 to use low & high)
+#define MAX_PWM_IOPIN    33u   // hardware pwm pins < 34
 #ifndef MAX_EXPANDER_BITS
   #define MAX_EXPANDER_BITS 32 // I2S expander bit width (max 32)
 #endif
@@ -165,11 +163,13 @@ int freeMemory();
 
 #pragma GCC diagnostic pop
 
+void _delay_ms(const int ms);
+
 // ------------------------
 // MarlinHAL Class
 // ------------------------
 
-#define HAL_ADC_VREF_MV   3300
+#define HAL_ADC_VREF         3.3
 #define HAL_ADC_RESOLUTION  10
 
 class MarlinHAL {
@@ -192,9 +192,9 @@ public:
   static void isr_on()  { if (spinlock.owner != portMUX_FREE_VAL) portEXIT_CRITICAL(&spinlock); }
   static void isr_off() { portENTER_CRITICAL(&spinlock); }
 
-  static void delay_ms(const int ms) { delay(ms); }
+  static void delay_ms(const int ms) { _delay_ms(ms); }
 
-  // Tasks, called from marlin.idle()
+  // Tasks, called from idle()
   static void idletask();
 
   // Reset

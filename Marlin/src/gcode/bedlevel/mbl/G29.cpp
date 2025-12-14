@@ -40,14 +40,12 @@
 
 #if ENABLED(EXTENSIBLE_UI)
   #include "../../../lcd/extui/ui_api.h"
+#elif ENABLED(DWIN_LCD_PROUI)
+  #include "../../../lcd/e3v2/proui/dwin.h"
 #endif
 
 #define DEBUG_OUT ENABLED(DEBUG_LEVELING_FEATURE)
 #include "../../../core/debug_out.h"
-
-#if ENABLED(FT_MOTION)
-  #include "../../../module/ft_motion.h"
-#endif
 
 // Save 130 bytes with non-duplication of PSTR
 inline void echo_not_entered(const char c) { SERIAL_CHAR(c); SERIAL_ECHOLNPGM(" not entered."); }
@@ -66,10 +64,6 @@ inline void echo_not_entered(const char c) { SERIAL_CHAR(c); SERIAL_ECHOLNPGM(" 
  *  S5              Reset and disable mesh
  */
 void GcodeSuite::G29() {
-
-  // Potentially disable Fixed-Time Motion for probing
-  TERN_(FT_MOTION, FTM_DISABLE_IN_SCOPE());
-
   DEBUG_SECTION(log_G29, "G29", true);
 
   // G29 Q is also available if debugging
@@ -98,7 +92,7 @@ void GcodeSuite::G29() {
     case MeshReport:
       SERIAL_ECHOPGM("Mesh Bed Leveling ");
       if (leveling_is_valid()) {
-        SERIAL_ECHOLN(ON_OFF(planner.leveling_active));
+        serialprintln_onoff(planner.leveling_active);
         bedlevel.report_mesh();
       }
       else
@@ -149,6 +143,7 @@ void GcodeSuite::G29() {
         queue.inject(F("G29S2"));
 
         TERN_(EXTENSIBLE_UI, ExtUI::onLevelingStart());
+        TERN_(DWIN_LCD_PROUI, DWIN_LevelingStart());
 
         return;
       }
@@ -174,10 +169,11 @@ void GcodeSuite::G29() {
         // Save Z for the previous mesh position
         bedlevel.set_zigzag_z(mbl_probe_index - 1, current_position.z);
         TERN_(EXTENSIBLE_UI, ExtUI::onMeshUpdate(ix, iy, current_position.z));
+        TERN_(DWIN_LCD_PROUI, DWIN_MeshUpdate(_MIN(mbl_probe_index, GRID_MAX_POINTS), int(GRID_MAX_POINTS), current_position.z));
         SET_SOFT_ENDSTOP_LOOSE(false);
       }
       // If there's another point to sample, move there with optional lift.
-      if (mbl_probe_index < GRID_MAX_POINTS) {
+      if (mbl_probe_index < (GRID_MAX_POINTS)) {
         // Disable software endstops to allow manual adjustment
         // If G29 is left hanging without completion they won't be re-enabled!
         SET_SOFT_ENDSTOP_LOOSE(true);
@@ -225,7 +221,7 @@ void GcodeSuite::G29() {
         }
       }
       else
-        return echo_not_entered('I');
+        return echo_not_entered('J');
 
       if (parser.seenval('J')) {
         iy = parser.value_int();
@@ -240,6 +236,7 @@ void GcodeSuite::G29() {
       if (parser.seenval('Z')) {
         bedlevel.z_values[ix][iy] = parser.value_linear_units();
         TERN_(EXTENSIBLE_UI, ExtUI::onMeshUpdate(ix, iy, bedlevel.z_values[ix][iy]));
+        TERN_(DWIN_LCD_PROUI, DWIN_MeshUpdate(ix, iy, bedlevel.z_values[ix][iy]));
       }
       else
         return echo_not_entered('Z');

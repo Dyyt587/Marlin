@@ -30,7 +30,7 @@
 #include "../module/planner.h"
 #include "../module/stepper.h" // for block_t
 #include "../gcode/queue.h"
-#include "pause.h" // for did_pause_print
+#include "../feature/pause.h"
 
 #include "../inc/MarlinConfig.h"
 
@@ -45,25 +45,12 @@
 
 #if ENABLED(FILAMENT_MOTION_SENSOR)
   #define HAS_FILAMENT_MOTION 1
-  #if ENABLED(FILAMENT_SWITCH_AND_MOTION)
-    #define HAS_FILAMENT_SWITCH 1
-  #endif
-#else
+#endif
+#if DISABLED(FILAMENT_MOTION_SENSOR) || ENABLED(FILAMENT_SWITCH_AND_MOTION)
   #define HAS_FILAMENT_SWITCH 1
 #endif
 
-#define FILAMENT_IS_OUT(N...) (READ(FIL_RUNOUT##N##_PIN) == FIL_RUNOUT##N##_STATE)
-
-typedef Flags<
-          #if NUM_MOTION_SENSORS > NUM_RUNOUT_SENSORS
-            NUM_MOTION_SENSORS
-          #else
-            NUM_RUNOUT_SENSORS
-          #endif
-        > runout_flags_t;
-
 void event_filament_runout(const uint8_t extruder);
-inline bool should_monitor_runout() { return did_pause_print || marlin.printingIsActive(); }
 
 template<class RESPONSE_T, class SENSOR_T>
 class TFilamentMonitor;
@@ -121,18 +108,15 @@ class TFilamentMonitor : public FilamentMonitorBase {
       static void filament_motion_present(const uint8_t extruder) {
         response.filament_motion_present(extruder);
       }
-      static float& motion_distance() { return response.motion_distance_mm; }
-      static void set_motion_distance(const float mm) { response.motion_distance_mm = mm; }
     #endif
 
     #if HAS_FILAMENT_RUNOUT_DISTANCE
       static float& runout_distance() { return response.runout_distance_mm; }
-      static void set_runout_distance(const float mm) { response.runout_distance_mm = mm; }
+      static void set_runout_distance(const_float_t mm) { response.runout_distance_mm = mm; }
     #endif
 
     // Handle a block completion. RunoutResponseDelayed uses this to
     // add up the length of filament moved while the filament is out.
-    // Called from ISR context!
     static void block_completed(const block_t * const b) {
       if (enabled) {
         response.block_completed(b);
@@ -142,44 +126,49 @@ class TFilamentMonitor : public FilamentMonitorBase {
 
     // Give the response a chance to update its counter.
     static void run() {
-      if (!enabled || filament_ran_out || !should_monitor_runout()) return;
-      TERN_(HAS_FILAMENT_RUNOUT_DISTANCE, cli()); // Prevent RunoutResponseDelayed::block_completed from accumulating here
-      response.run();
-      sensor.run();
-      const runout_flags_t runout_flags = response.has_run_out();
-      TERN_(HAS_FILAMENT_RUNOUT_DISTANCE, sei());
-      #if MULTI_FILAMENT_SENSOR
-        #if ENABLED(WATCH_ALL_RUNOUT_SENSORS)
-          const bool ran_out = bool(runout_flags);  // any sensor triggers
-          uint8_t extruder = 0;
-          if (ran_out) while (!runout_flags.test(extruder)) extruder++;
+      if (enabled && !filament_ran_out && (printingIsActive() || did_pause_print)) {
+        TERN_(HAS_FILAMENT_RUNOUT_DISTANCE, cli()); // Prevent RunoutResponseDelayed::block_completed from accumulating here
+        response.run();
+        sensor.run();
+        const uint8_t runout_flags = response.has_run_out();
+        TERN_(HAS_FILAMENT_RUNOUT_DISTANCE, sei());
+        #if MULTI_FILAMENT_SENSOR
+          #if ENABLED(WATCH_ALL_RUNOUT_SENSORS)
+            const bool ran_out = !!runout_flags;  // any sensor triggers
+            uint8_t extruder = 0;
+            if (ran_out) {
+              uint8_t bitmask = runout_flags;
+              while (!(bitmask & 1)) {
+                bitmask >>= 1;
+                extruder++;
+              }
+            }
+          #else
+            const bool ran_out = TEST(runout_flags, active_extruder);  // suppress non active extruders
+            uint8_t extruder = active_extruder;
+          #endif
         #else
-          const bool ran_out = runout_flags[active_extruder];  // suppress non active extruders
+          const bool ran_out = !!runout_flags;
           uint8_t extruder = active_extruder;
         #endif
-      #else
-        const bool ran_out = bool(runout_flags);
-        uint8_t extruder = active_extruder;
-      #endif
 
-      if (!ran_out) return;
+        #if ENABLED(FILAMENT_RUNOUT_SENSOR_DEBUG)
+          if (runout_flags) {
+            SERIAL_ECHOPGM("Runout Sensors: ");
+            LOOP_L_N(i, 8) SERIAL_ECHO('0' + TEST(runout_flags, i));
+            SERIAL_ECHOPGM(" -> ", extruder);
+            if (ran_out) SERIAL_ECHOPGM(" RUN OUT");
+            SERIAL_EOL();
+          }
+        #endif
 
-      #if ENABLED(FILAMENT_RUNOUT_SENSOR_DEBUG)
-        SERIAL_ECHOPGM("Runout Sensors: ");
-        for (uint8_t i = 0; i < 8; ++i) SERIAL_CHAR('0' + char(runout_flags[i]));
-        SERIAL_ECHOLNPGM(" -> ", extruder, " RUN OUT");
-      #endif
-
-      filament_ran_out = true;
-      event_filament_runout(extruder);
-      planner.synchronize();
+        if (ran_out) {
+          filament_ran_out = true;
+          event_filament_runout(extruder);
+          planner.synchronize();
+        }
+      }
     }
-
-    // Reset after a filament runout or upon resuming a job
-    static void init_for_restart(const bool onoff=true) {
-      response.init_for_restart(onoff);
-    }
-
 };
 
 /*************************** FILAMENT PRESENCE SENSORS ***************************/
@@ -202,13 +191,13 @@ class FilamentSensorBase {
   public:
     static void setup() {
       #define _INIT_RUNOUT_PIN(P,S,U,D) do{ if (ENABLED(U)) SET_INPUT_PULLUP(P); else if (ENABLED(D)) SET_INPUT_PULLDOWN(P); else SET_INPUT(P); }while(0);
-      #define  INIT_RUNOUT_PIN(N) _INIT_RUNOUT_PIN(FIL_RUNOUT##N##_PIN, FIL_RUNOUT##N##_STATE, FIL_RUNOUT##N##_PULLUP, FIL_RUNOUT##N##_PULLDOWN);
-      REPEAT_1(NUM_RUNOUT_SENSORS, INIT_RUNOUT_PIN)
+      #define  INIT_RUNOUT_PIN(N) _INIT_RUNOUT_PIN(FIL_RUNOUT##N##_PIN, FIL_RUNOUT##N##_STATE, FIL_RUNOUT##N##_PULLUP, FIL_RUNOUT##N##_PULLDOWN)
+      REPEAT_1(NUM_RUNOUT_SENSORS, INIT_RUNOUT_PIN);
       #undef INIT_RUNOUT_PIN
 
       #if ENABLED(FILAMENT_SWITCH_AND_MOTION)
-        #define INIT_MOTION_PIN(N) _INIT_RUNOUT_PIN(FIL_MOTION##N##_PIN, FIL_MOTION##N##_STATE, FIL_MOTION##N##_PULLUP, FIL_MOTION##N##_PULLDOWN);
-        REPEAT_1(NUM_MOTION_SENSORS, INIT_MOTION_PIN)
+        #define INIT_MOTION_PIN(N) _INIT_RUNOUT_PIN(FIL_MOTION##N##_PIN, FIL_MOTION##N##_STATE, FIL_MOTION##N##_PULLUP, FIL_MOTION##N##_PULLDOWN)
+        REPEAT_1(NUM_MOTION_SENSORS, INIT_MOTION_PIN);
         #undef  INIT_MOTION_PIN
       #endif
       #undef _INIT_RUNOUT_PIN
@@ -223,9 +212,9 @@ class FilamentSensorBase {
 
     // Return a bitmask of runout flag states (1 bits always indicates runout)
     static uint8_t poll_runout_states() {
-      #define _INVERT_BIT(N) | (FIL_RUNOUT##N##_STATE ? 0 : _BV(N - 1))
-      return poll_runout_pins() ^ uint8_t(0 REPEAT_1(NUM_RUNOUT_SENSORS, _INVERT_BIT));
-      #undef _INVERT_BIT
+      #define _OR_RUNOUT(N) | (FIL_RUNOUT##N##_STATE ? 0 : _BV(N - 1))
+      return poll_runout_pins() ^ uint8_t(0 REPEAT_1(NUM_RUNOUT_SENSORS, _OR_RUNOUT));
+      #undef _OR_RUNOUT
     }
 
     #if ENABLED(FILAMENT_SWITCH_AND_MOTION)
@@ -266,7 +255,7 @@ class FilamentSensorBase {
         #if ENABLED(FILAMENT_RUNOUT_SENSOR_DEBUG)
           if (change) {
             SERIAL_ECHOPGM("Motion detected:");
-            for (uint8_t e = 0; e < TERN(FILAMENT_SWITCH_AND_MOTION, NUM_MOTION_SENSORS, NUM_RUNOUT_SENSORS); ++e)
+            LOOP_L_N(e, TERN(FILAMENT_SWITCH_AND_MOTION, NUM_MOTION_SENSORS, NUM_RUNOUT_SENSORS))
               if (TEST(change, e)) SERIAL_CHAR(' ', '0' + e);
             SERIAL_EOL();
           }
@@ -276,7 +265,6 @@ class FilamentSensorBase {
       }
 
     public:
-      // Called from ISR context to indicate a block was completed
       static void block_completed(const block_t * const b) {
         // If the sensor wheel has moved since the last call to
         // this method reset the runout counter for the extruder.
@@ -313,18 +301,17 @@ class FilamentSensorBase {
       }
 
     public:
-      // Called from ISR context to indicate a block was completed
       static void block_completed(const block_t * const) {}
 
       static void run() {
-        for (uint8_t s = 0; s < NUM_RUNOUT_SENSORS; ++s) {
+        LOOP_L_N(s, NUM_RUNOUT_SENSORS) {
           const bool out = poll_runout_state(s);
           if (!out) filament_present(s);
           #if ENABLED(FILAMENT_RUNOUT_SENSOR_DEBUG)
             static uint8_t was_out; // = 0
             if (out != TEST(was_out, s)) {
               TBI(was_out, s);
-              SERIAL_ECHOLN(F("Filament Sensor "), AS_DIGIT(s), out ? F(" OUT") : F(" IN"));
+              SERIAL_ECHOLNF(F("Filament Sensor "), AS_DIGIT(s), out ? F(" OUT") : F(" IN"));
             }
           #endif
         }
@@ -343,7 +330,6 @@ class FilamentSensorBase {
       TERN_(HAS_FILAMENT_SWITCH, static FilamentSensorSwitch switch_sensor);
 
     public:
-      // Called from ISR context to indicate a block was completed
       static void block_completed(const block_t * const b) {
         TERN_(HAS_FILAMENT_MOTION, encoder_sensor.block_completed(b));
         TERN_(HAS_FILAMENT_SWITCH, switch_sensor.block_completed(b));
@@ -355,16 +341,15 @@ class FilamentSensorBase {
       }
   };
 
+
 /********************************* RESPONSE TYPE *********************************/
 
 #if HAS_FILAMENT_RUNOUT_DISTANCE
 
   typedef struct {
     float runout[NUM_RUNOUT_SENSORS];
-    Flags<NUM_RUNOUT_SENSORS> runout_reset;    // Reset runout later
     #if ENABLED(FILAMENT_SWITCH_AND_MOTION)
       float motion[NUM_MOTION_SENSORS];
-      Flags<NUM_MOTION_SENSORS> motion_reset;  // Reset motion later
     #endif
   } countdown_t;
 
@@ -373,135 +358,65 @@ class FilamentSensorBase {
   // during a runout condition.
   class RunoutResponseDelayed {
     private:
-      static countdown_t mm_countdown;
-      #if ENABLED(FILAMENT_SWITCH_AND_MOTION)
-        static bool ignore_motion;  // Flag to ignore the encoder
-      #endif
+      static volatile countdown_t mm_countdown;
 
     public:
       static float runout_distance_mm;
 
-      #if ENABLED(FILAMENT_SWITCH_AND_MOTION)
-        static float motion_distance_mm;
-      #endif
-
-      static void set_ignore_motion(const bool ignore=true) {
-        UNUSED(ignore);
-        TERN_(FILAMENT_SWITCH_AND_MOTION, ignore_motion = ignore);
-      }
-
       static void reset() {
-        for (uint8_t i = 0; i < NUM_RUNOUT_SENSORS; ++i) filament_present(i);
+        LOOP_L_N(i, NUM_RUNOUT_SENSORS) filament_present(i);
         #if ENABLED(FILAMENT_SWITCH_AND_MOTION)
-          for (uint8_t i = 0; i < NUM_MOTION_SENSORS; ++i) filament_motion_present(i);
+          LOOP_L_N(i, NUM_MOTION_SENSORS) filament_motion_present(i);
         #endif
-        set_ignore_motion(false);
       }
 
       static void run() {
         #if ENABLED(FILAMENT_RUNOUT_SENSOR_DEBUG)
           static millis_t t = 0;
           const millis_t ms = millis();
-          if (PENDING(ms, t)) return;
-          t = ms + 1000UL;
-          for (uint8_t i = 0; i < NUM_RUNOUT_SENSORS; ++i)
-            SERIAL_ECHO(i ? F(", ") : F("Runout remaining mm: "), mm_countdown.runout[i]);
-          #if ENABLED(FILAMENT_SWITCH_AND_MOTION)
-            for (uint8_t i = 0; i < NUM_MOTION_SENSORS; ++i)
-              SERIAL_ECHO(i ? F(", ") : F("Motion remaining mm: "), mm_countdown.motion[i]);
-          #endif
-          SERIAL_EOL();
+          if (ELAPSED(ms, t)) {
+            t = millis() + 1000UL;
+            LOOP_L_N(i, NUM_RUNOUT_SENSORS)
+              SERIAL_ECHOF(i ? F(", ") : F("Runout remaining mm: "), mm_countdown.runout[i]);
+            #if ENABLED(FILAMENT_SWITCH_AND_MOTION)
+              LOOP_L_N(i, NUM_MOTION_SENSORS)
+                SERIAL_ECHOF(i ? F(", ") : F("Motion remaining mm: "), mm_countdown.motion[i]);
+            #endif
+            SERIAL_EOL();
+          }
         #endif
       }
 
-      // Get runout status for all presence sensors and motion sensors
-      static runout_flags_t has_run_out() {
-        runout_flags_t runout_flags{0};
-
+      static uint8_t has_run_out() {
+        uint8_t runout_flags = 0;
+        LOOP_L_N(i, NUM_RUNOUT_SENSORS) if (mm_countdown.runout[i] < 0) SBI(runout_flags, i);
         #if ENABLED(FILAMENT_SWITCH_AND_MOTION)
-          // Runout based on filament motion
-          if (!ignore_motion) {
-            for (uint8_t i = 0; i < NUM_MOTION_SENSORS; ++i) {
-              if (mm_countdown.motion[i] < 0) {
-                runout_flags.set(i);
-                mm_countdown.runout[i] = -1;  // For a filament jam don't wait for runout_distance_mm!
-              }
-            }
-          }
+          LOOP_L_N(i, NUM_MOTION_SENSORS) if (mm_countdown.motion[i] < 0) SBI(runout_flags, i);
         #endif
-
-        // Runout based on filament presence
-        for (uint8_t i = 0; i < NUM_RUNOUT_SENSORS; ++i)
-          if (mm_countdown.runout[i] < 0)
-            runout_flags.set(i);
-
         return runout_flags;
       }
 
       static void filament_present(const uint8_t extruder) {
-        if (mm_countdown.runout[extruder] < runout_distance_mm || did_pause_print) {
-          // Reset runout only if it is smaller than runout_distance or printing is paused.
-          // On Bowden systems retract may be larger than runout_distance_mm, so if retract
-          // was added leave it in place, or the following unretract will cause runout event.
-          mm_countdown.runout[extruder] = runout_distance_mm;
-          mm_countdown.runout_reset.clear(extruder);
-        }
-        else {
-          // If runout is larger than runout distance, we cannot reset right now, as Bowden and retract
-          // distance larger than runout_distance_mm leads to negative runout right after unretract.
-          // But we cannot ignore filament_present event. After unretract, runout will become smaller
-          // than runout_distance_mm and should be reset after that. So activate delayed reset.
-          mm_countdown.runout_reset.set(extruder);
-        }
+        mm_countdown.runout[extruder] = runout_distance_mm;
       }
 
       #if ENABLED(FILAMENT_SWITCH_AND_MOTION)
         static void filament_motion_present(const uint8_t extruder) {
-          // Same logic as filament_present
-          if (mm_countdown.motion[extruder] < motion_distance_mm || did_pause_print) {
-            mm_countdown.motion[extruder] = motion_distance_mm;
-            mm_countdown.motion_reset.clear(extruder);
-          }
-          else
-            mm_countdown.motion_reset.set(extruder);
+          mm_countdown.motion[extruder] = runout_distance_mm;
         }
       #endif
 
-      // Called from ISR context to indicate a block was completed
       static void block_completed(const block_t * const b) {
-        // No calculation unless paused or printing
-        if (!should_monitor_runout()) return;
-
-        // Only extrusion moves are examined
-        const int32_t esteps = b->steps.e;
-        if (!esteps) return;
-
-        // No need to ignore retract/unretract movement since they complement each other
-        const uint8_t e = b->extruder;
-        const float mm = (b->direction_bits.e ? esteps : -esteps) * planner.mm_per_step[E_AXIS_N(e)];
-
-        // Apply E distance to runout countdown, reset if flagged
-        if (e < NUM_RUNOUT_SENSORS) {
-          mm_countdown.runout[e] -= mm;
-          if (mm_countdown.runout_reset[e]) filament_present(e);          // Reset pending. Try to reset.
+        if (b->steps.x || b->steps.y || b->steps.z || did_pause_print) { // Allow pause purge move to re-trigger runout state
+          // Only trigger on extrusion with XYZ movement to allow filament change and retract/recover.
+          const uint8_t e = b->extruder;
+          const int32_t steps = b->steps.e;
+          const float mm = (TEST(b->direction_bits, E_AXIS) ? -steps : steps) * planner.mm_per_step[E_AXIS_N(e)];
+          if (e < NUM_RUNOUT_SENSORS) mm_countdown.runout[e] -= mm;
+          #if ENABLED(FILAMENT_SWITCH_AND_MOTION)
+            if (e < NUM_MOTION_SENSORS) mm_countdown.motion[e] -= mm;
+          #endif
         }
-
-        #if ENABLED(FILAMENT_SWITCH_AND_MOTION)
-          // Apply E distance to motion countdown, reset if flagged
-          if (!ignore_motion && e < NUM_MOTION_SENSORS) {
-            mm_countdown.motion[e] -= mm;
-            if (mm_countdown.motion_reset[e]) filament_motion_present(e); // Reset pending. Try to reset.
-          }
-        #endif
-      }
-
-      // Reset after a filament runout or upon resuming a job
-      static void init_for_restart(const bool onoff=true) {
-        UNUSED(onoff);
-        #if ENABLED(FILAMENT_SWITCH_AND_MOTION)
-          reset(); // also calls set_ignore_motion(false)
-          set_ignore_motion(!onoff);
-        #endif
       }
   };
 
@@ -517,28 +432,24 @@ class FilamentSensorBase {
 
     public:
       static void reset() {
-        for (uint8_t i = 0; i < NUM_RUNOUT_SENSORS; ++i) filament_present(i);
+        LOOP_L_N(i, NUM_RUNOUT_SENSORS) filament_present(i);
       }
 
       static void run() {
-        for (uint8_t i = 0; i < NUM_RUNOUT_SENSORS; ++i) if (runout_count[i] >= 0) runout_count[i]--;
+        LOOP_L_N(i, NUM_RUNOUT_SENSORS) if (runout_count[i] >= 0) runout_count[i]--;
       }
 
-      static runout_flags_t has_run_out() {
-        runout_flags_t runout_flags{0};
-        for (uint8_t i = 0; i < NUM_RUNOUT_SENSORS; ++i) if (runout_count[i] < 0) runout_flags.set(i);
+      static uint8_t has_run_out() {
+        uint8_t runout_flags = 0;
+        LOOP_L_N(i, NUM_RUNOUT_SENSORS) if (runout_count[i] < 0) SBI(runout_flags, i);
         return runout_flags;
       }
 
-      // Called from ISR context to indicate a block was completed
       static void block_completed(const block_t * const) { }
 
       static void filament_present(const uint8_t extruder) {
         runout_count[extruder] = runout_threshold;
       }
-
-      // Reset after a filament runout or upon resuming a job
-      static void init_for_restart(const bool=true) { reset(); }
   };
 
 #endif // !HAS_FILAMENT_RUNOUT_DISTANCE

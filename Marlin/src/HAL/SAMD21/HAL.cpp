@@ -40,6 +40,8 @@
   DefaultSerial3 MSerial2(false, Serial2);
 #endif
 
+
+
 #define WDT_CONFIG_PER_7_Val 0x9u
 #define WDT_CONFIG_PER_Pos 0
 #define WDT_CONFIG_PER_7 (WDT_CONFIG_PER_7_Val << WDT_CONFIG_PER_Pos)
@@ -107,7 +109,7 @@ void MarlinHAL::init() {
     #if HAS_SD_DETECT && SD_CONNECTION_IS(ONBOARD)
       SET_INPUT_PULLUP(SD_DETECT_PIN);
     #endif
-    OUT_WRITE(SD_SS_PIN, HIGH);  // Try to set SDSS inactive before any other SPI users start up
+    OUT_WRITE(SDSS, HIGH);  // Try to set SDSS inactive before any other SPI users start up
   #endif
 }
 
@@ -162,6 +164,7 @@ void MarlinHAL::adc_init() {
 
   ADC->REFCTRL.reg = ADC_REFCTRL_REFSEL_INTVCC1;
   ADC->AVGCTRL.reg = ADC_AVGCTRL_SAMPLENUM_32| ADC_AVGCTRL_ADJRES(4);;
+
 
   ADC->CTRLB.reg = ADC_CTRLB_PRESCALER_DIV128 |
                  ADC_CTRLB_RESSEL_16BIT |

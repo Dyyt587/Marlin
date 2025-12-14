@@ -27,11 +27,7 @@
 #define Z2_STEP_PIN                         PF5
 #define Z2_DIR_PIN                          PF1
 
-// Some Chitu v6 boards use PA14 and some use PG9.
-// The CXY-V6-191017 in early Tronxy X5SA Pro printers apparently use PG9.
-#ifndef Z_STOP_PIN
-  #define Z_STOP_PIN                        PA14
-#endif
+#define Z_STOP_PIN                          PA14
 
 #ifndef FIL_RUNOUT2_PIN
   #define FIL_RUNOUT2_PIN                   PF13
@@ -43,7 +39,7 @@
 
 #include "pins_CHITU3D_common.h"
 
-/**
+/*
  * Circuit diagram https://github.com/MarlinFirmware/Marlin/files/3401484/x5sa-main_board-2.pdf
  *
  * Details on the 30 pin ribbon pins. From: https://3dtoday.ru/blogs/artem-sr/tronxy-x5sa-pro-ustanovka-bfp-touch-na-board-chitu3d-v6-cxy-v6-191017

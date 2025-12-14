@@ -20,11 +20,14 @@
  *
  */
 
-#include "../../fontdata.h"
+#include "../../../../../inc/MarlinConfigPre.h"
 
+#define NOTOSANS 123
 #if HAS_GRAPHICAL_TFT && TFT_FONT == NOTOSANS
 
-// NotoSans Medium Katakana 26pt, capital 'A' height: 19px, width: 100%, range: 0x30a0-0x8868, glyphs: 103
+#include <stdint.h>
+
+// NotoSans Medium Katakana 26pt, capital 'A' heigth: 19px, width: 100%, range: 0x30a0-0x8868, glyphs: 103
 extern const uint8_t NotoSans_Medium_Katakana_19[13182] = {
   162,19,160,48,104,136,25,249, // unifont_t
   // 0x30a0  ゠

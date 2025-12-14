@@ -1,39 +1,24 @@
-#!/usr/bin/env python3
 #
 # configuration.py
 # Apply options from config.ini to the existing Configuration headers
 #
-import re, os, shutil, configparser, datetime
+import re, shutil, configparser
 from pathlib import Path
 
 verbose = 0
-def blab(msg, level=1):
-    if verbose >= level: print(f"[config] {msg}")
+def blab(str,level=1):
+    if verbose >= level: print(f"[config] {str}")
 
 def config_path(cpath):
-    return Path("Marlin", cpath)
+    return Path("Marlin", cpath, encoding='utf-8')
 
 # Apply a single name = on/off ; name = value ; etc.
 # TODO: Limit to the given (optional) configuration
-def apply_opt(name, val):
+def apply_opt(name, val, conf=None):
     if name == "lcd": name, val = val, "on"
 
-    """
-    Create a regex to match the option and capture parts of the line
-    1: Indentation
-    2: Comment
-    3: #define and whitespace
-    4: Option name
-    5: First space after name
-    6: Remaining spaces between name and value
-    7: Option value
-    8: Whitespace after value
-    9: End comment
-    """
-    regex = re.compile(
-        rf"^(\s*)(//\s*)?(#define\s+)({name}\b)(\s?)(\s*)(.*?)(\s*)(//.*)?$",
-        re.IGNORECASE
-    )
+    # Create a regex to match the option and capture parts of the line
+    regex = re.compile(rf'^(\s*)(//\s*)?(#define\s+)({name}\b)(\s*)(.*?)(\s*)(//.*)?$', re.IGNORECASE)
 
     # Find and enable and/or update all matches
     for file in ("Configuration.h", "Configuration_adv.h"):
@@ -49,15 +34,13 @@ def apply_opt(name, val):
                 if val in ("on", "", None):
                     newline = re.sub(r'^(\s*)//+\s*(#define)(\s{1,3})?(\s*)', r'\1\2 \4', line)
                 elif val == "off":
-                    # TODO: Comment more lines in a multi-line define with \ continuation
                     newline = re.sub(r'^(\s*)(#define)(\s{1,3})?(\s*)', r'\1//\2 \4', line)
                 else:
                     # For options with values, enable and set the value
-                    addsp = '' if match[5] else ' '
-                    newline = match[1] + match[3] + match[4] + match[5] + addsp + val + match[6]
-                    if match[9]:
-                        sp = match[8] if match[8] else ' '
-                        newline += sp + match[9]
+                    newline = match[1] + match[3] + match[4] + match[5] + val
+                    if match[8]:
+                        sp = match[7] if match[7] else ' '
+                        newline += sp + match[8]
                 lines[i] = newline
                 blab(f"Set {name} to {val}")
 
@@ -95,50 +78,12 @@ def apply_opt(name, val):
                 elif not isdef:
                     break
                 linenum += 1
-            currtime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            lines.insert(linenum, f"{prefix}#define {added:30} // Added by config.ini {currtime}\n")
+            lines.insert(linenum, f"{prefix}#define {added:30} // Added by config.ini\n")
             fullpath.write_text(''.join(lines), encoding='utf-8')
-
-# Disable all (most) defined options in the configuration files.
-# Everything in the named sections. Section hint for exceptions may be added.
-def disable_all_options():
-    # Create a regex to match the option and capture parts of the line
-    blab("Disabling all configuration options...")
-    regex = re.compile(r'^(\s*)(#define\s+)([A-Z0-9_]+\b)(\s?)(\s*)(.*?)(\s*)(//.*)?$', re.IGNORECASE)
-
-    # Disable all enabled options in both Config files
-    for file in ("Configuration.h", "Configuration_adv.h"):
-        fullpath = config_path(file)
-        if not fullpath.exists():
-            blab(f"File not found: {fullpath}", 0)
-            continue
-
-        lines = fullpath.read_text(encoding='utf-8').split('\n')
-        found = False
-        for i in range(len(lines)):
-            line = lines[i]
-            match = regex.match(line)
-            if match:
-                name = match[3].upper()
-                if name in ('CONFIGURATION_H_VERSION', 'CONFIGURATION_ADV_H_VERSION', 'CONFIG_EXAMPLES_DIR'): continue
-                if name.startswith('_'): continue
-                found = True
-                # Comment out the define
-                # TODO: Comment more lines in a multi-line define with \ continuation
-                lines[i] = re.sub(r'^(\s*)(#define)(\s{1,3})?(\s*)', r'\1//\2 \4', line)
-                blab(f"Disable {name}")
-                #blab(f"Disable {name}", 2)
-                # TODO: Taken from mc-apply, not sure which
-
-        # If the option was found, write the modified lines
-        if found:
-            fullpath.write_text('\n'.join(lines), encoding='utf-8')
-            blab(f"Updated {file}")
 
 # Fetch configuration files from GitHub given the path.
 # Return True if any files were fetched.
 def fetch_example(url):
-    blab(f"Fetching example configuration from: {url}")
     if url.endswith("/"): url = url[:-1]
     if not url.startswith('http'):
         brch = "bugfix-2.1.x"
@@ -154,12 +99,11 @@ def fetch_example(url):
         fetch = "wget -q -O"
     else:
         blab("Couldn't find curl or wget", -1)
-        #blab("Couldn't find curl or wget", 0)
-        # TODO: Taken from mc-apply, not sure which
         return False
 
+    import os
+
     # Reset configurations to default
-    blab("Resetting configurations to default...")
     os.system("git checkout HEAD Marlin/*.h")
 
     # Try to fetch the remote files
@@ -168,21 +112,15 @@ def fetch_example(url):
         if os.system(f"{fetch} wgot {url}/{fn} >/dev/null 2>&1") == 0:
             shutil.move('wgot', config_path(fn))
             gotfile = True
-            blab(f"Fetched {fn}", 2)
 
     if Path('wgot').exists(): shutil.rmtree('wgot')
-
-    if gotfile:
-        blab("Example configuration fetched successfully")
-    else:
-        blab("Failed to fetch example configuration", 0)
 
     return gotfile
 
 def section_items(cp, sectkey):
     return cp.items(sectkey) if sectkey in cp.sections() else []
 
-# Apply all items from a config section. Ignore ini_ items outside of config:base and config:root.
+# Apply all items from a config section
 def apply_ini_by_name(cp, sect):
     iniok = True
     if sect in ('config:base', 'config:root'):
@@ -216,7 +154,7 @@ def apply_sections(cp, ckey='all'):
             apply_ini_by_name(cp, 'config:basic')
 
         # Apply historically Configuration_adv.h settings everywhere
-        # (Some of which rely on defines in 'Conditionals-2-LCD.h')
+        # (Some of which rely on defines in 'Conditionals_LCD.h')
         elif ckey in ('adv', 'advanced'):
             apply_ini_by_name(cp, 'config:advanced')
 
@@ -237,14 +175,16 @@ def apply_config_ini(cp):
 
     # For each ini_use_config item perform an action
     for ckey in config_keys:
+        addbase = False
+
         # For a key ending in .ini load and parse another .ini file
         if ckey.endswith('.ini'):
             sect = 'base'
             if '@' in ckey: sect, ckey = map(str.strip, ckey.split('@'))
             cp2 = configparser.ConfigParser()
-            cp2.read(config_path(ckey), encoding='utf-8')
+            cp2.read(config_path(ckey))
             apply_sections(cp2, sect)
-            ckey = 'base'
+            ckey = 'base';
 
         # (Allow 'example/' as a shortcut for 'examples/')
         elif ckey.startswith('example/'):
@@ -256,17 +196,7 @@ def apply_config_ini(cp):
             fetch_example(ckey)
             ckey = 'base'
 
-        #
-        # [flatten] Write out Configuration.h and Configuration_adv.h files with
-        #           just the enabled options and all other content removed.
-        #
-        #if ckey == '[flatten]':
-        #   write_flat_configs()
-
-        if ckey == '[disable]':
-            disable_all_options()
-
-        elif ckey == 'all':
+        if ckey == 'all':
             apply_sections(cp)
 
         else:
@@ -283,30 +213,28 @@ if __name__ == "__main__":
         if args[0].endswith('.ini'):
             ini_file = args[0]
         else:
-            print("Usage: %s <.ini file>" % os.path.basename(sys.argv[0]))
+            print("Usage: %s <.ini file>" % sys.argv[0])
     else:
         ini_file = config_path('config.ini')
 
     if ini_file:
         user_ini = configparser.ConfigParser()
-        user_ini.read(ini_file, encoding='utf-8')
+        user_ini.read(ini_file)
         apply_config_ini(user_ini)
 
 else:
     #
     # From within PlatformIO use the loaded INI file
     #
-    try:
-        import pioutil
-        if pioutil.is_pio_build():
-            try:
-                verbose = int(pioutil.env.GetProjectOption('custom_verbose'))
-            except:
-                pass
+    import pioutil
+    if pioutil.is_pio_build():
 
-            from platformio.project.config import ProjectConfig
-            apply_config_ini(ProjectConfig())
-    except AttributeError:
-        # Handle the 'IsIntegrationDump' error here, or just continue if
-        # the build is not a PlatformIO build where pioutil would be unavailable.
-        pass
+        Import("env")
+
+        try:
+            verbose = int(env.GetProjectOption('custom_verbose'))
+        except:
+            pass
+
+        from platformio.project.config import ProjectConfig
+        apply_config_ini(ProjectConfig())

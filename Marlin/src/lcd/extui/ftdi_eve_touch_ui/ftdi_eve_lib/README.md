@@ -1,4 +1,5 @@
-## FTDI EVE Library
+FTDI EVE Library
+----------------
 
 The FTDI EVE Library is a fully open-source library and UI framework for the FTDI
 FT800 and FT810 graphics processor.

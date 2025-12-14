@@ -37,6 +37,14 @@ GCodeQueue queue;
 #include "../MarlinCore.h"
 #include "../core/bug_on.h"
 
+#if ENABLED(PRINTER_EVENT_LEDS)
+  #include "../feature/leds/printer_event_leds.h"
+#endif
+
+#if HAS_ETHERNET
+  #include "../feature/ethernet.h"
+#endif
+
 #if ENABLED(BINARY_FILE_TRANSFER)
   #include "../feature/binary_stream.h"
 #endif
@@ -91,17 +99,13 @@ PGM_P GCodeQueue::injected_commands_P; // = nullptr
  */
 char GCodeQueue::injected_commands[64]; // = { 0 }
 
-/**
- * Commit the accumulated G-code command to the ring buffer,
- * also setting its origin info.
- */
-void GCodeQueue::RingBuffer::commit_command(const bool skip_ok
+void GCodeQueue::RingBuffer::commit_command(bool skip_ok
   OPTARG(HAS_MULTI_SERIAL, serial_index_t serial_ind/*=-1*/)
 ) {
   commands[index_w].skip_ok = skip_ok;
   TERN_(HAS_MULTI_SERIAL, commands[index_w].port = serial_ind);
   TERN_(POWER_LOSS_RECOVERY, recovery.commit_sdpos(index_w));
-  advance_w();
+  advance_pos(index_w, 1);
 }
 
 /**
@@ -109,7 +113,7 @@ void GCodeQueue::RingBuffer::commit_command(const bool skip_ok
  * Return true if the command was successfully added.
  * Return false for a full buffer, or if the 'command' is a comment.
  */
-bool GCodeQueue::RingBuffer::enqueue(const char *cmd, const bool skip_ok/*=true*/
+bool GCodeQueue::RingBuffer::enqueue(const char *cmd, bool skip_ok/*=true*/
   OPTARG(HAS_MULTI_SERIAL, serial_index_t serial_ind/*=-1*/)
 ) {
   if (*cmd == ';' || length >= BUFSIZE) return false;
@@ -191,8 +195,8 @@ bool GCodeQueue::process_injected_command() {
  * Enqueue and return only when commands are actually enqueued.
  * Never call this from a G-code handler!
  */
-void GCodeQueue::enqueue_one_now(const char * const cmd) { while (!enqueue_one(cmd)) marlin.idle(); }
-void GCodeQueue::enqueue_one_now(FSTR_P const fcmd) { while (!enqueue_one(fcmd)) marlin.idle(); }
+void GCodeQueue::enqueue_one_now(const char * const cmd) { while (!enqueue_one(cmd)) idle(); }
+void GCodeQueue::enqueue_one_now(FSTR_P const fcmd) { while (!enqueue_one(fcmd)) idle(); }
 
 /**
  * Attempt to enqueue a single G-code command
@@ -232,7 +236,7 @@ void GCodeQueue::enqueue_now_P(PGM_P const pgcode) {
  * Send an "ok" message to the host, indicating
  * that a command was successfully processed.
  *
- * With ADVANCED_OK:
+ * If ADVANCED_OK is enabled also include:
  *   N<int>  Line number of the command, if any
  *   P<int>  Planner space remaining
  *   B<int>  Block queue space remaining
@@ -290,7 +294,7 @@ static bool serial_data_available(serial_index_t index) {
 #if NO_TIMEOUTS > 0
   // Multiserial already handles dispatch to/from multiple ports
   static bool any_serial_data_available() {
-    for (uint8_t p = 0; p < NUM_SERIAL; ++p)
+    LOOP_L_N(p, NUM_SERIAL)
       if (serial_data_available(p))
         return true;
     return false;
@@ -309,7 +313,7 @@ inline int read_serial(const serial_index_t index) { return SERIAL_IMPL.read(ind
    */
   void GCodeQueue::flush_rx() {
     // Flush receive buffer
-    for (uint8_t p = 0; p < NUM_SERIAL; ++p) {
+    LOOP_L_N(p, NUM_SERIAL) {
       if (!serial_data_available(p)) continue; // No data for this port? Skip.
       while (SERIAL_IMPL.available(p)) (void)read_serial(p);
     }
@@ -320,7 +324,7 @@ inline int read_serial(const serial_index_t index) { return SERIAL_IMPL.read(ind
 void GCodeQueue::gcode_line_error(FSTR_P const ferr, const serial_index_t serial_ind) {
   PORT_REDIRECT(SERIAL_PORTMASK(serial_ind)); // Reply to the serial port that sent the command
   SERIAL_ERROR_START();
-  SERIAL_ECHOLN(ferr, serial_state[serial_ind.index].last_N);
+  SERIAL_ECHOLNF(ferr, serial_state[serial_ind.index].last_N);
   while (read_serial(serial_ind) != -1) { /* nada */ } // Clear out the RX buffer. Why don't use flush here ?
   flush_and_request_resend(serial_ind);
   serial_state[serial_ind.index].count = 0;
@@ -426,7 +430,7 @@ void GCodeQueue::get_serial_commands() {
   // send "wait" to indicate Marlin is still waiting.
   #if NO_TIMEOUTS > 0
     const millis_t ms = millis();
-    if (ring_buffer.empty() && !any_serial_data_available() && ELAPSED(ms, last_command_time, NO_TIMEOUTS)) {
+    if (ring_buffer.empty() && !any_serial_data_available() && ELAPSED(ms, last_command_time + NO_TIMEOUTS)) {
       SERIAL_ECHOLNPGM(STR_WAIT);
       last_command_time = ms;
     }
@@ -437,7 +441,7 @@ void GCodeQueue::get_serial_commands() {
     // Unless a serial port has data, this will exit on next iteration
     hadData = false;
 
-    for (uint8_t p = 0; p < NUM_SERIAL; ++p) {
+    LOOP_L_N(p, NUM_SERIAL) {
       // Check if the queue is full and exit if it is.
       if (ring_buffer.full()) return;
 
@@ -520,7 +524,7 @@ void GCodeQueue::get_serial_commands() {
         // Movement commands give an alert when the machine is stopped
         //
 
-        if (marlin.isStopped()) {
+        if (IsStopped()) {
           char* gpos = strchr(command, 'G');
           if (gpos) {
             switch (strtol(gpos + 1, nullptr, 10)) {
@@ -538,8 +542,8 @@ void GCodeQueue::get_serial_commands() {
         #if DISABLED(EMERGENCY_PARSER)
           // Process critical commands early
           if (command[0] == 'M') switch (command[3]) {
-            case '8': if (command[2] == '0' && command[1] == '1') { marlin.end_waiting(); } break;
-            case '2': if (command[2] == '1' && command[1] == '1') marlin.kill(FPSTR(M112_KILL_STR), nullptr, true); break;
+            case '8': if (command[2] == '0' && command[1] == '1') { wait_for_heatup = false; TERN_(HAS_MARLINUI_MENU, wait_for_user = false); } break;
+            case '2': if (command[2] == '1' && command[1] == '1') kill(FPSTR(M112_KILL_STR), nullptr, true); break;
             case '0': if (command[1] == '4' && command[2] == '1') quickstop_stepper(); break;
           }
         #endif
@@ -570,7 +574,7 @@ void GCodeQueue::get_serial_commands() {
     static uint8_t sd_input_state = PS_NORMAL;
 
     // Get commands if there are more in the file
-    if (!card.isStillFetching()) return;
+    if (!IS_SD_FETCHING()) return;
 
     int sd_count = 0;
     while (!ring_buffer.full() && !card.eof()) {
@@ -702,15 +706,15 @@ void GCodeQueue::advance() {
   #endif // HAS_MEDIA
 
   // The queue may be reset by a command handler or by code invoked by idle() within a handler
-  ring_buffer.advance_r();
+  ring_buffer.advance_pos(ring_buffer.index_r, -1);
 }
 
 #if ENABLED(BUFFER_MONITORING)
 
   void GCodeQueue::report_buffer_statistics() {
     SERIAL_ECHOLNPGM("D576"
-      " P:", planner.moves_free(),         " ", planner_buffer_underruns, " (", max_planner_buffer_empty_duration, ")"
-      " B:", BUFSIZE - ring_buffer.length, " ", command_buffer_underruns, " (", max_command_buffer_empty_duration, ")"
+      " P:", planner.moves_free(),         " ", -planner_buffer_underruns, " (", max_planner_buffer_empty_duration, ")"
+      " B:", BUFSIZE - ring_buffer.length, " ", -command_buffer_underruns, " (", max_command_buffer_empty_duration, ")"
     );
     command_buffer_underruns = planner_buffer_underruns = 0;
     max_command_buffer_empty_duration = max_planner_buffer_empty_duration = 0;

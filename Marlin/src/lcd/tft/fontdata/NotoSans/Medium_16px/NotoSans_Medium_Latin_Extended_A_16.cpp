@@ -20,11 +20,14 @@
  *
  */
 
-#include "../../fontdata.h"
+#include "../../../../../inc/MarlinConfigPre.h"
 
+#define NOTOSANS 123
 #if HAS_GRAPHICAL_TFT && TFT_FONT == NOTOSANS
 
-// NotoSans Medium Latin Extended-A 22pt, capital 'A' height: 16px, width: 100%, range: 0x0100-0x017f
+#include <stdint.h>
+
+// NotoSans Medium Latin Extended-A 22pt, capital 'A' heigth: 16px, width: 100%, range: 0x0100-0x017f
 extern const uint8_t NotoSans_Medium_Latin_Extended_A_16[8564] = {
   130,16,0,1,127,1,21,250, // unifont_t
   // 0x0100  Ā

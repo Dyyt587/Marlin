@@ -184,7 +184,7 @@
 //
 // Misc. Functions
 //
-#define SD_SS_PIN                             53
+#define SDSS                                  53
 #define LED_PIN                               13
 
 #ifndef KILL_PIN
@@ -211,8 +211,8 @@
 // M3/M4/M5 - Spindle/Laser Control
 //
 #if HAS_CUTTER && !defined(SPINDLE_LASER_ENA_PIN)
-  #define SPINDLE_LASER_PWM_PIN                6  // Hardware PWM
   #define SPINDLE_LASER_ENA_PIN                4  // Pullup or pulldown!
+  #define SPINDLE_LASER_PWM_PIN                6  // Hardware PWM
   #define SPINDLE_DIR_PIN                      5
 #endif
 
@@ -244,10 +244,13 @@
   #endif
 #endif
 
-//
-// LCD / Controller
-//
+//////////////////////////
+// LCDs and Controllers //
+//////////////////////////
 
+//
+// LCD Display output pins
+//
 #if HAS_WIRED_LCD
   #define BEEPER_PIN                          45
   #define LCD_PINS_RS                         19

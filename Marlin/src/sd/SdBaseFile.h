@@ -46,19 +46,6 @@ struct filepos_t {
   filepos_t() : position(0), cluster(0) {}
 };
 
-// Avoid conflict with RP2040 / newlib fcntl.h
-#ifdef __PLAT_RP2040__
-  #undef O_RDONLY
-  #undef O_WRONLY
-  #undef O_RDWR
-  #undef O_ACCMODE
-  #undef O_APPEND
-  #undef O_SYNC
-  #undef O_TRUNC
-  #undef O_CREAT
-  #undef O_EXCL
-#endif
-
 // use the gnu style oflag in open()
 uint8_t const O_READ = 0x01,                    // open() oflag for reading
               O_RDONLY = O_READ,                // open() oflag - same as O_IN
@@ -79,6 +66,7 @@ uint8_t const O_READ = 0x01,                    // open() oflag for reading
 uint8_t const LS_DATE = 1,    // ls() flag to print modify date
               LS_SIZE = 2,    // ls() flag to print file size
               LS_R = 4;       // ls() flag for recursive list of subdirectories
+
 
 // flags for timestamp
 uint8_t const T_ACCESS = 1,   // Set the file's last access date
@@ -295,7 +283,7 @@ class SdBaseFile {
   bool isRoot() const { return type_ == FAT_FILE_TYPE_ROOT_FIXED || type_ == FAT_FILE_TYPE_ROOT32; }
 
   bool getDosName(char * const name);
-  void ls(const uint8_t flags=0, const uint8_t indent=0);
+  void ls(uint8_t flags=0, uint8_t indent=0);
 
   bool mkdir(SdBaseFile *parent, const char *path, const bool pFlag=true);
   bool open(SdBaseFile * const dirFile, uint16_t index, const uint8_t oflag);

@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
-from __future__ import print_function, division
+from __future__ import print_function
+from __future__ import division
 
 """ Generate the stepper delay lookup table for Marlin firmware. """
 

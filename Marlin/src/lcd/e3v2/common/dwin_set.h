@@ -25,7 +25,12 @@
 #define Language_English    1
 #define Language_Chinese    2
 
-#define ICON 7 // 7.ICO
+//#define USE_STOCK_DWIN_SET  // Use the Creality stock DWIN_SET instead of Marlin's unified DWIN_SET by The-EG & thinkyhead
+#ifdef USE_STOCK_DWIN_SET
+  #define ICON 9 // 9.ICO
+#else
+  #define ICON 7 // 7.ICO
+#endif
 
 #ifndef CORP_WEBSITE
   #define CORP_WEBSITE WEBSITE_URL
@@ -77,7 +82,7 @@
 #define ICON_Motion             41
 #define ICON_WriteEEPROM        42
 #define ICON_ReadEEPROM         43
-#define ICON_ResetEEPROM        44
+#define ICON_ResumeEEPROM       44
 #define ICON_Info               45
 
 #define ICON_SetEndTemp         46
@@ -128,15 +133,9 @@
 #define ICON_Info_0             90
 #define ICON_Info_1             91
 
-// Extra Icons
-#define ICON_Printer_0         93
-#define ICON_Box              200
-#define ICON_Checkbox         201
-#define ICON_Probe            206
-
 #define ICON_Folder       ICON_More
 #define ICON_AdvSet       ICON_Language
-#define ICON_HomeOffset   ICON_PrintSize
+#define ICON_HomeOffset   ICON_AdvSet
 #define ICON_HomeOffsetX  ICON_StepX
 #define ICON_HomeOffsetY  ICON_StepY
 #define ICON_HomeOffsetZ  ICON_StepZ
@@ -144,39 +143,5 @@
 #define ICON_ProbeOffsetX ICON_StepX
 #define ICON_ProbeOffsetY ICON_StepY
 #define ICON_ProbeOffsetZ ICON_StepZ
-#define ICON_PIDNozzle    ICON_HotendTemp
-#define ICON_PIDBed       ICON_BedTemp
-#define ICON_FWRetract    ICON_StepE
-#define ICON_FWRetLength  ICON_StepE
-#define ICON_FWRetSpeed   ICON_Setspeed
-#define ICON_FWRetZRaise  ICON_MoveZ
-#define ICON_FWRecSpeed   ICON_Setspeed
-#define ICON_FWRecExtra   ICON_StepE
-
-#if DISABLED(DWIN_CREALITY_LCD_STD_ICONS)
-  // Index of custom icons should be >= CUSTOM_ICON_START
-  #define CUSTOM_ICON_START         200
-  #define ICON_Checkbox_F           ICON_Box
-  #define ICON_Checkbox_T           ICON_Checkbox
-  #define ICON_Fade                 202
-  #define ICON_Mesh                 203
-  #define ICON_Tilt                 204
-  #define ICON_Brightness           205
-  #define ICON_AxisD                249
-  #define ICON_AxisBR               250
-  #define ICON_AxisTR               251
-  #define ICON_AxisBL               252
-  #define ICON_AxisTL               253
-  #define ICON_AxisC                254
-#else
-  #define ICON_Fade                 ICON_Version
-  #define ICON_Mesh                 ICON_Version
-  #define ICON_Tilt                 ICON_Version
-  #define ICON_Brightness           ICON_Version
-  #define ICON_AxisD                ICON_Axis
-  #define ICON_AxisBR               ICON_Axis
-  #define ICON_AxisTR               ICON_Axis
-  #define ICON_AxisBL               ICON_Axis
-  #define ICON_AxisTL               ICON_Axis
-  #define ICON_AxisC                ICON_Axis
-#endif
+#define ICON_PIDNozzle    ICON_SetEndTemp
+#define ICON_PIDbed       ICON_SetBedTemp

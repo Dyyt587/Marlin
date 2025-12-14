@@ -23,7 +23,8 @@
 
 /**
  * bq ZUM Mega 3D board definition
- * Schematic: https://github.com/bq/zum/blob/master/zum-mega3d/Zum%20Mega%203D.PDF
+ * Schematic: https://green-candy.osdn.jp/external/MarlinFW/board_schematics/bq%20ZUM%20Mega%203D/Zum%20Mega%203D.PDF
+ * Origin: https://github.com/bq/zum/blob/master/zum-mega3d/Zum%20Mega%203D.PDF
  * ATmega2560
  */
 
@@ -94,11 +95,9 @@
 //
 // M3/M4/M5 - Spindle/Laser Control
 //
-#if HAS_CUTTER
-  #define SPINDLE_LASER_PWM_PIN               44  // Hardware PWM
-  #define SPINDLE_LASER_ENA_PIN               40  // Pullup or pulldown!
-  #define SPINDLE_DIR_PIN                     42
-#endif
+#define SPINDLE_LASER_ENA_PIN                 40  // Pullup or pulldown!
+#define SPINDLE_LASER_PWM_PIN                 44  // Hardware PWM
+#define SPINDLE_DIR_PIN                       42
 
 //
 // Misc. Functions

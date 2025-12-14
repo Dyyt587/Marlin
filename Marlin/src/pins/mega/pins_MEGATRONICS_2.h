@@ -23,7 +23,8 @@
 
 /**
  * MegaTronics v2.0 pin assignments
- * Schematic: https://reprap.org/wiki/File:Megatronicsv2PDF.zip
+ * Schematic: https://green-candy.osdn.jp/external/MarlinFW/board_schematics/Megatronics%20v2.0/megatronics%20-%20Project.pdf
+ * Origin: https://reprap.org/wiki/File:Megatronicsv2PDF.zip
  * ATmega2560
  */
 
@@ -110,7 +111,7 @@
 //
 // Misc. Functions
 //
-#define SD_SS_PIN                             53
+#define SDSS                                  53
 #define LED_PIN                               13
 #define PS_ON_PIN                             12
 
@@ -121,11 +122,9 @@
 //
 // M3/M4/M5 - Spindle/Laser Control
 //
-#if HAS_CUTTER
-  #define SPINDLE_LASER_PWM_PIN                3  // Hardware PWM
-  #define SPINDLE_LASER_ENA_PIN               16  // Pullup!
-  #define SPINDLE_DIR_PIN                     11
-#endif
+#define SPINDLE_LASER_PWM_PIN                  3  // Hardware PWM
+#define SPINDLE_LASER_ENA_PIN                 16  // Pullup!
+#define SPINDLE_DIR_PIN                       11
 
 //
 // LCD / Controller

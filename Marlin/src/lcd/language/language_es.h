@@ -28,39 +28,31 @@
  * See also https://marlinfw.org/docs/development/lcd_language.html
  */
 
-#if HAS_SDCARD && !HAS_USB_FLASH_DRIVE
-  #define MEDIA_TYPE_ES "SD"
-#elif HAS_USB_FLASH_DRIVE && !HAS_SDCARD
-  #define MEDIA_TYPE_ES "USB"
-#else
-  #define MEDIA_TYPE_ES "SD/FD"
-#endif
-
-namespace LanguageNarrow_es {
+namespace Language_es {
   using namespace Language_en; // Inherit undefined strings from English
 
   constexpr uint8_t CHARSIZE              = 2;
   LSTR LANGUAGE                           = _UxGT("Spanish");
 
-  LSTR WELCOME_MSG                        = MACHINE_NAME_SUBST _UxGT(" Lista");
+  LSTR WELCOME_MSG                        = MACHINE_NAME _UxGT(" Lista");
   LSTR MSG_YES                            = _UxGT("SI");
   LSTR MSG_NO                             = _UxGT("NO");
   LSTR MSG_BACK                           = _UxGT("Atrás");
-
   LSTR MSG_MEDIA_ABORTING                 = _UxGT("Cancelando...");
-  LSTR MSG_MEDIA_INSERTED                 = MEDIA_TYPE_ES _UxGT(" insertado");
-  LSTR MSG_MEDIA_REMOVED                  = MEDIA_TYPE_ES _UxGT(" retirado");
-  LSTR MSG_MEDIA_INIT_FAIL                = _UxGT("Fallo al iniciar ") MEDIA_TYPE_ES;
-  LSTR MSG_MEDIA_READ_ERROR               = _UxGT("Error lectura ") MEDIA_TYPE_ES;
-  LSTR MSG_USB_FD_DEVICE_REMOVED          = _UxGT("Disp. USB retirado");
-  LSTR MSG_USB_FD_USB_FAILED              = _UxGT("Inicio USB fallido");
+  LSTR MSG_MEDIA_INSERTED                 = _UxGT("SD/FD insertado");
+  LSTR MSG_MEDIA_REMOVED                  = _UxGT("SD/FD retirado");
+  LSTR MSG_MEDIA_WAITING                  = _UxGT("Esperando al SD/FD");
+  LSTR MSG_MEDIA_INIT_FAIL                = _UxGT("Fallo al iniciar SD/FD");
+  LSTR MSG_MEDIA_READ_ERROR               = _UxGT("Error lectura SD/FD");
+  LSTR MSG_MEDIA_USB_REMOVED              = _UxGT("Disp. USB retirado");
+  LSTR MSG_MEDIA_USB_FAILED               = _UxGT("Inicio USB fallido");
   LSTR MSG_KILL_SUBCALL_OVERFLOW          = _UxGT("Desbordamiento de subllamada");
-
   LSTR MSG_LCD_ENDSTOPS                   = _UxGT("Endstops"); // Max length 8 characters
   LSTR MSG_LCD_SOFT_ENDSTOPS              = _UxGT("Soft Endstops");
   LSTR MSG_MAIN_MENU                      = _UxGT("Menú principal");
   LSTR MSG_ADVANCED_SETTINGS              = _UxGT("Ajustes avanzados");
   LSTR MSG_CONFIGURATION                  = _UxGT("Configuración");
+  LSTR MSG_RUN_AUTO_FILES                 = _UxGT("Inicio automático");
   LSTR MSG_DISABLE_STEPPERS               = _UxGT("Apagar motores");
   LSTR MSG_DEBUG_MENU                     = _UxGT("Menú depuración");
   LSTR MSG_PROGRESS_BAR_TEST              = _UxGT("Prob. barra progreso");
@@ -80,23 +72,23 @@ namespace LanguageNarrow_es {
   LSTR MSG_Z_FADE_HEIGHT                  = _UxGT("Compen. Altura");
   LSTR MSG_SET_HOME_OFFSETS               = _UxGT("Ajustar desfases");
   LSTR MSG_HOME_OFFSETS_APPLIED           = _UxGT("Desfase aplicada");
+  #if HAS_PREHEAT
+    LSTR MSG_PREHEAT_1                    = _UxGT("Precal. ") PREHEAT_1_LABEL;
+    LSTR MSG_PREHEAT_1_H                  = _UxGT("Precal. ") PREHEAT_1_LABEL " ~";
+    LSTR MSG_PREHEAT_1_END                = _UxGT("Precal. ") PREHEAT_1_LABEL _UxGT(" Fusor");
+    LSTR MSG_PREHEAT_1_END_E              = _UxGT("Precal. ") PREHEAT_1_LABEL _UxGT(" Fusor ~");
+    LSTR MSG_PREHEAT_1_ALL                = _UxGT("Precal. ") PREHEAT_1_LABEL _UxGT(" Todo");
+    LSTR MSG_PREHEAT_1_BEDONLY            = _UxGT("Precal. ") PREHEAT_1_LABEL _UxGT(" Cama");
+    LSTR MSG_PREHEAT_1_SETTINGS           = _UxGT("Precal. ") PREHEAT_1_LABEL _UxGT(" Ajuste");
 
-  LSTR MSG_PREHEAT_1                      = _UxGT("Precal. ") PREHEAT_1_LABEL;
-  LSTR MSG_PREHEAT_1_H                    = _UxGT("Precal. ") PREHEAT_1_LABEL " ~";
-  LSTR MSG_PREHEAT_1_END                  = _UxGT("Precal. ") PREHEAT_1_LABEL _UxGT(" Fusor");
-  LSTR MSG_PREHEAT_1_END_E                = _UxGT("Precal. ") PREHEAT_1_LABEL _UxGT(" Fusor ~");
-  LSTR MSG_PREHEAT_1_ALL                  = _UxGT("Precal. ") PREHEAT_1_LABEL _UxGT(" Todo");
-  LSTR MSG_PREHEAT_1_BEDONLY              = _UxGT("Precal. ") PREHEAT_1_LABEL _UxGT(" Cama");
-  LSTR MSG_PREHEAT_1_SETTINGS             = _UxGT("Precal. ") PREHEAT_1_LABEL _UxGT(" Ajuste");
-
-  LSTR MSG_PREHEAT_M                      = _UxGT("Precal. $");
-  LSTR MSG_PREHEAT_M_H                    = _UxGT("Precal. $ ~");
-  LSTR MSG_PREHEAT_M_END                  = _UxGT("Precal. $ Fusor");
-  LSTR MSG_PREHEAT_M_END_E                = _UxGT("Precal. $ Fusor ~");
-  LSTR MSG_PREHEAT_M_ALL                  = _UxGT("Precal. $ Todo");
-  LSTR MSG_PREHEAT_M_BEDONLY              = _UxGT("Precal. $ Cama");
-  LSTR MSG_PREHEAT_M_SETTINGS             = _UxGT("Precal. $ Ajuste");
-
+    LSTR MSG_PREHEAT_M                   = _UxGT("Precal. $");
+    LSTR MSG_PREHEAT_M_H                 = _UxGT("Precal. $ ~");
+    LSTR MSG_PREHEAT_M_END               = _UxGT("Precal. $ Fusor");
+    LSTR MSG_PREHEAT_M_END_E             = _UxGT("Precal. $ Fusor ~");
+    LSTR MSG_PREHEAT_M_ALL               = _UxGT("Precal. $ Todo");
+    LSTR MSG_PREHEAT_M_BEDONLY           = _UxGT("Precal. $ Cama");
+    LSTR MSG_PREHEAT_M_SETTINGS          = _UxGT("Precal. $ Ajuste");
+  #endif
   LSTR MSG_PREHEAT_CUSTOM                 = _UxGT("Precal. manual");
   LSTR MSG_COOLDOWN                       = _UxGT("Enfriar");
   LSTR MSG_CUTTER_FREQUENCY               = _UxGT("Frecuencia");
@@ -110,7 +102,6 @@ namespace LanguageNarrow_es {
   LSTR MSG_EXTRUDE                        = _UxGT("Extruir");
   LSTR MSG_RETRACT                        = _UxGT("Retraer");
   LSTR MSG_MOVE_AXIS                      = _UxGT("Mover ejes");
-  LSTR MSG_PROBE_AND_LEVEL                = _UxGT("Sondear y Nivelar");
   LSTR MSG_BED_LEVELING                   = _UxGT("Nivelando Cama");
   LSTR MSG_LEVEL_BED                      = _UxGT("Nivelar Cama");
   LSTR MSG_BED_TRAMMING                   = _UxGT("Recorrido Cama");
@@ -133,26 +124,32 @@ namespace LanguageNarrow_es {
   LSTR MSG_IDEX_MODE_MIRRORED_COPY        = _UxGT("Copia Reflejada");
   LSTR MSG_IDEX_MODE_FULL_CTRL            = _UxGT("Control Total");
   LSTR MSG_HOTEND_OFFSET_Z                = _UxGT("2ª Fusor Z");
-  LSTR MSG_HOTEND_OFFSET_N                = _UxGT("2ª Fusor @");
+  LSTR MSG_HOTEND_OFFSET_A                = _UxGT("2ª Fusor @");
   LSTR MSG_UBL_DOING_G29                  = _UxGT("Hacer G29");
   LSTR MSG_UBL_TOOLS                      = _UxGT("Herramientas UBL");
+  LSTR MSG_UBL_LEVEL_BED                  = _UxGT("Nivelado UBL");
   LSTR MSG_LCD_TILTING_MESH               = _UxGT("Punto de inclinación");
   LSTR MSG_UBL_MANUAL_MESH                = _UxGT("Crear Mallado man.");
   LSTR MSG_UBL_BC_INSERT                  = _UxGT("Colocar cuña y Medir");
   LSTR MSG_UBL_BC_INSERT2                 = _UxGT("Medir");
   LSTR MSG_UBL_BC_REMOVE                  = _UxGT("Retirar y Medir Cama");
   LSTR MSG_UBL_MOVING_TO_NEXT             = _UxGT("Mover al Siguente");
+  LSTR MSG_UBL_ACTIVATE_MESH              = _UxGT("Activar UBL");
+  LSTR MSG_UBL_DEACTIVATE_MESH            = _UxGT("Desactivar UBL");
   LSTR MSG_UBL_SET_TEMP_BED               = _UxGT("Temp. Cama");
   LSTR MSG_UBL_BED_TEMP_CUSTOM            = _UxGT("Temp. Cama perso.");
   LSTR MSG_UBL_SET_TEMP_HOTEND            = _UxGT("Temp. Fusor");
   LSTR MSG_UBL_HOTEND_TEMP_CUSTOM         = _UxGT("Temp. Fusor perso.");
+  LSTR MSG_UBL_MESH_EDIT                  = _UxGT("Editar Mallado");
   LSTR MSG_UBL_EDIT_CUSTOM_MESH           = _UxGT("Edit. Mallado perso.");
   LSTR MSG_UBL_FINE_TUNE_MESH             = _UxGT("Ajuste fino Mallado");
   LSTR MSG_UBL_DONE_EDITING_MESH          = _UxGT("Term. edici. Mallado");
   LSTR MSG_UBL_BUILD_CUSTOM_MESH          = _UxGT("Crear Mallado Pers.");
   LSTR MSG_UBL_BUILD_MESH_MENU            = _UxGT("Crear Mallado");
-  LSTR MSG_UBL_BUILD_MESH_M               = _UxGT("Crear Mallado ($)");
-  LSTR MSG_UBL_VALIDATE_MESH_M            = _UxGT("Valid. Mall. ($)");
+  #if HAS_PREHEAT
+    LSTR MSG_UBL_BUILD_MESH_M             = _UxGT("Crear Mallado ($)");
+    LSTR MSG_UBL_VALIDATE_MESH_M          = _UxGT("Valid. Mall. ($)");
+  #endif
   LSTR MSG_UBL_BUILD_COLD_MESH            = _UxGT("Crear Mallado Frío");
   LSTR MSG_UBL_MESH_HEIGHT_ADJUST         = _UxGT("Ajustar alt. Mallado");
   LSTR MSG_UBL_MESH_HEIGHT_AMOUNT         = _UxGT("Cantidad de altura");
@@ -192,8 +189,8 @@ namespace LanguageNarrow_es {
   LSTR MSG_MESH_LOADED                    = _UxGT("Malla %i Cargada");
   LSTR MSG_MESH_SAVED                     = _UxGT("Malla %i Guardada");
   LSTR MSG_UBL_NO_STORAGE                 = _UxGT("Sin guardar");
-  LSTR MSG_UBL_SAVE_ERROR                 = _UxGT("Error Guardar UBL");
-  LSTR MSG_UBL_RESTORE_ERROR              = _UxGT("Error Restaurar UBL");
+  LSTR MSG_UBL_SAVE_ERROR                 = _UxGT("Error: Guardar UBL");
+  LSTR MSG_UBL_RESTORE_ERROR              = _UxGT("Error: Restaurar UBL");
   LSTR MSG_UBL_Z_OFFSET                   = _UxGT("Desfase de Z: ");
   LSTR MSG_UBL_Z_OFFSET_STOPPED           = _UxGT("Desfase de Z Parado");
   LSTR MSG_UBL_STEP_BY_STEP_MENU          = _UxGT("UBL Paso a Paso");
@@ -206,8 +203,7 @@ namespace LanguageNarrow_es {
   LSTR MSG_UBL_7_SAVE_MESH                = _UxGT("7.Guardar Mall. cama");
 
   LSTR MSG_LED_CONTROL                    = _UxGT("Control LED");
-  LSTR MSG_LIGHTS                         = _UxGT("Luces");
-  LSTR MSG_LIGHT_N                        = _UxGT("Luce #{");
+  LSTR MSG_LEDS                           = _UxGT("LEDS");
   LSTR MSG_LED_PRESETS                    = _UxGT("Color predefinido");
   LSTR MSG_SET_LEDS_RED                   = _UxGT("Rojo");
   LSTR MSG_SET_LEDS_ORANGE                = _UxGT("Naranja");
@@ -235,8 +231,11 @@ namespace LanguageNarrow_es {
   LSTR MSG_MOVE_EN                        = _UxGT("Extrusor *");
   LSTR MSG_HOTEND_TOO_COLD                = _UxGT("Hotend muy frio");
   LSTR MSG_MOVE_N_MM                      = _UxGT("Mover $mm");
-  LSTR MSG_MOVE_N_IN                      = _UxGT("Mover $in");
-  LSTR MSG_MOVE_N_DEG                     = _UxGT("Mover $") LCD_STR_DEGREE;
+  LSTR MSG_MOVE_01MM                      = _UxGT("Mover 0.1mm");
+  LSTR MSG_MOVE_1MM                       = _UxGT("Mover 1mm");
+  LSTR MSG_MOVE_10MM                      = _UxGT("Mover 10mm");
+  LSTR MSG_MOVE_50MM                      = _UxGT("Mover 50mm");
+  LSTR MSG_MOVE_100MM                     = _UxGT("Mover 100mm");
   LSTR MSG_SPEED                          = _UxGT("Velocidad");
   LSTR MSG_MESH_Z_OFFSET                  = _UxGT("Cama Z");
   LSTR MSG_NOZZLE                         = _UxGT("Boquilla");
@@ -316,11 +315,11 @@ namespace LanguageNarrow_es {
   LSTR MSG_RESTORE_DEFAULTS               = _UxGT("Rest. fábrica");
   LSTR MSG_INIT_EEPROM                    = _UxGT("Inicializar EEPROM");
   LSTR MSG_ERR_EEPROM_CRC                 = _UxGT("Err: EEPROM CRC");
-  LSTR MSG_ERR_EEPROM_SIZE                = _UxGT("Err: EEPROM Tamaño");
+  LSTR MSG_ERR_EEPROM_INDEX               = _UxGT("Err: Índice EEPROM");
   LSTR MSG_ERR_EEPROM_VERSION             = _UxGT("Err: Versión EEPROM");
-  LSTR MSG_MEDIA_UPDATE                   = _UxGT("Actualizar ") MEDIA_TYPE_ES;
+  LSTR MSG_MEDIA_UPDATE                   = _UxGT("Actualizar SD/FD");
   LSTR MSG_RESET_PRINTER                  = _UxGT("Resetear Impresora");
-  LSTR MSG_REFRESH                        = LCD_STR_REFRESH _UxGT("Recargar");
+  LSTR MSG_REFRESH                        = LCD_STR_REFRESH  _UxGT("Recargar");
   LSTR MSG_INFO_SCREEN                    = _UxGT("Pantalla de Inf.");
   LSTR MSG_PREPARE                        = _UxGT("Preparar");
   LSTR MSG_TUNE                           = _UxGT("Ajustar");
@@ -341,8 +340,8 @@ namespace LanguageNarrow_es {
   LSTR MSG_CANCEL_OBJECT                  = _UxGT("Cancelar Objeto");
   LSTR MSG_CANCEL_OBJECT_N                = _UxGT("Cancelar Objeto {");
   LSTR MSG_OUTAGE_RECOVERY                = _UxGT("Rec. Fallo electrico");
-  LSTR MSG_MEDIA_MENU                     = _UxGT("Imprim. desde ") MEDIA_TYPE_ES;
-  LSTR MSG_NO_MEDIA                       = MEDIA_TYPE_ES _UxGT(" no presente");
+  LSTR MSG_MEDIA_MENU                     = _UxGT("Imprim. desde SD/FD");
+  LSTR MSG_NO_MEDIA                       = _UxGT("SD/FD no presente");
   LSTR MSG_DWELL                          = _UxGT("Reposo...");
   LSTR MSG_USERWAIT                       = _UxGT("Pulsar para Reanudar");
   LSTR MSG_PRINT_PAUSED                   = _UxGT("Impresión Pausada");
@@ -374,14 +373,9 @@ namespace LanguageNarrow_es {
   LSTR MSG_FILAMENTUNLOAD                 = _UxGT("Descargar filamento");
   LSTR MSG_FILAMENTUNLOAD_E               = _UxGT("Descargar fil. *");
   LSTR MSG_FILAMENTUNLOAD_ALL             = _UxGT("Descargar todo");
-
-  LSTR MSG_ATTACH_MEDIA                   = _UxGT("Iniciar ") MEDIA_TYPE_ES;
-  LSTR MSG_ATTACH_SD                      = _UxGT("Iniciar SD");
-  LSTR MSG_ATTACH_USB                     = _UxGT("Iniciar USB");
-  LSTR MSG_CHANGE_MEDIA                   = _UxGT("Cambiar ") MEDIA_TYPE_ES;
-  LSTR MSG_RELEASE_MEDIA                  = _UxGT("Lanzar ") MEDIA_TYPE_ES;
-  LSTR MSG_RUN_AUTOFILES                  = _UxGT("Inicio automático");
-
+  LSTR MSG_ATTACH_MEDIA                   = _UxGT("Iniciar SD/FD");
+  LSTR MSG_CHANGE_MEDIA                   = _UxGT("Cambiar SD/FD");
+  LSTR MSG_RELEASE_MEDIA                  = _UxGT("Lanzar SD/FD");
   LSTR MSG_ZPROBE_OUT                     = _UxGT("Sonda Z fuera cama");
   LSTR MSG_SKEW_FACTOR                    = _UxGT("Factor de desviación");
   LSTR MSG_BLTOUCH                        = _UxGT("BLTouch");
@@ -409,17 +403,17 @@ namespace LanguageNarrow_es {
   LSTR MSG_ZPROBE_XOFFSET                 = _UxGT("Desf. Sonda X");
   LSTR MSG_ZPROBE_YOFFSET                 = _UxGT("Desf. Sonda Y");
   LSTR MSG_ZPROBE_ZOFFSET                 = _UxGT("Desf. Sonda Z");
-  LSTR MSG_ZPROBE_OFFSET_N                = _UxGT("Desf. Sonda @");
-  LSTR MSG_BABYSTEP_PROBE_Z               = _UxGT("Ajuste Z al paso");
   LSTR MSG_BABYSTEP_X                     = _UxGT("Micropaso X");
   LSTR MSG_BABYSTEP_Y                     = _UxGT("Micropaso Y");
   LSTR MSG_BABYSTEP_Z                     = _UxGT("Micropaso Z");
   LSTR MSG_BABYSTEP_N                     = _UxGT("Micropaso @");
   LSTR MSG_BABYSTEP_TOTAL                 = _UxGT("Total");
   LSTR MSG_ENDSTOP_ABORT                  = _UxGT("Cancelado - Endstop");
-  LSTR MSG_ERR_HEATING_FAILED             = _UxGT("Calent. fallido");
+  LSTR MSG_HEATING_FAILED_LCD             = _UxGT("Calent. fallido");
   LSTR MSG_ERR_REDUNDANT_TEMP             = _UxGT("Err: TEMP. REDUN.");
-  LSTR MSG_ERR_THERMAL_RUNAWAY            = _UxGT("FUGA TÉRMICA");
+  LSTR MSG_THERMAL_RUNAWAY                = _UxGT("FUGA TÉRMICA");
+  LSTR MSG_THERMAL_RUNAWAY_BED            = _UxGT("FUGA TÉRMICA CAMA");
+  LSTR MSG_THERMAL_RUNAWAY_CHAMBER        = _UxGT("FUGA TÉRMICA CAMARA");
   LSTR MSG_ERR_MAXTEMP                    = _UxGT("Err:TEMP. MÁX");
   LSTR MSG_ERR_MINTEMP                    = _UxGT("Err:TEMP. MIN");
   LSTR MSG_HALTED                         = _UxGT("IMPRESORA DETENIDA");
@@ -460,11 +454,19 @@ namespace LanguageNarrow_es {
   LSTR MSG_CASE_LIGHT_BRIGHTNESS          = _UxGT("Brillo cabina");
   LSTR MSG_KILL_EXPECTED_PRINTER          = _UxGT("Impresora incorrecta");
 
-  LSTR MSG_INFO_PRINT_COUNT               = _UxGT("Impresiones");
-  LSTR MSG_INFO_COMPLETED_PRINTS          = _UxGT("Completadas");
-  LSTR MSG_INFO_PRINT_TIME                = _UxGT("Total");
-  LSTR MSG_INFO_PRINT_LONGEST             = _UxGT("Más larga");
-  LSTR MSG_INFO_PRINT_FILAMENT            = _UxGT("Extruido");
+  #if LCD_WIDTH >= 20 || HAS_DWIN_E3V2
+    LSTR MSG_INFO_PRINT_COUNT             = _UxGT("Cont. de impresión");
+    LSTR MSG_INFO_COMPLETED_PRINTS        = _UxGT("Completadas");
+    LSTR MSG_INFO_PRINT_TIME              = _UxGT("Tiempo total de imp.");
+    LSTR MSG_INFO_PRINT_LONGEST           = _UxGT("Impresión más larga");
+    LSTR MSG_INFO_PRINT_FILAMENT          = _UxGT("Total Extruido");
+  #else
+    LSTR MSG_INFO_PRINT_COUNT             = _UxGT("Impresiones");
+    LSTR MSG_INFO_COMPLETED_PRINTS        = _UxGT("Completadas");
+    LSTR MSG_INFO_PRINT_TIME              = _UxGT("Total");
+    LSTR MSG_INFO_PRINT_LONGEST           = _UxGT("Más larga");
+    LSTR MSG_INFO_PRINT_FILAMENT          = _UxGT("Extruido");
+  #endif
 
   LSTR MSG_INFO_MIN_TEMP                  = _UxGT("Temp. Mínima");
   LSTR MSG_INFO_MAX_TEMP                  = _UxGT("Temp. Máxima");
@@ -532,53 +534,7 @@ namespace LanguageNarrow_es {
   LSTR MSG_SNAKE                          = _UxGT("Sn4k3");
   LSTR MSG_MAZE                           = _UxGT("Maze");
 
-  LSTR MSG_ADVANCED_PAUSE_WAITING         = _UxGT(MSG_1_LINE("Pulse para continuar"));
-  LSTR MSG_PAUSE_PRINT_PARKING            = _UxGT(MSG_1_LINE("Aparcando..."));
-  LSTR MSG_FILAMENT_CHANGE_INIT           = _UxGT(MSG_1_LINE("Por Favor espere..."));
-  LSTR MSG_FILAMENT_CHANGE_INSERT         = _UxGT(MSG_1_LINE("Inserte y Pulse"));
-  LSTR MSG_FILAMENT_CHANGE_HEAT           = _UxGT(MSG_1_LINE("Pulse para Calentar"));
-  LSTR MSG_FILAMENT_CHANGE_HEATING        = _UxGT(MSG_1_LINE("Calentando..."));
-  LSTR MSG_FILAMENT_CHANGE_UNLOAD         = _UxGT(MSG_1_LINE("Liberando..."));
-  LSTR MSG_FILAMENT_CHANGE_LOAD           = _UxGT(MSG_1_LINE("Cargando..."));
-  LSTR MSG_FILAMENT_CHANGE_PURGE          = _UxGT(MSG_1_LINE("Purgando..."));
-  LSTR MSG_FILAMENT_CHANGE_CONT_PURGE     = _UxGT(MSG_1_LINE("Pulse para finalizar"));
-  LSTR MSG_FILAMENT_CHANGE_RESUME         = _UxGT(MSG_1_LINE("Reanudando..."));
-
-  LSTR MSG_TMC_DRIVERS                    = _UxGT("Controladores TMC");
-  LSTR MSG_TMC_CURRENT                    = _UxGT("Amperaje Controlador");
-  LSTR MSG_TMC_HYBRID_THRS                = _UxGT("Límite Hibrido");
-  LSTR MSG_TMC_HOMING_THRS                = _UxGT("Origen sin sensores");
-  LSTR MSG_TMC_STEPPING_MODE              = _UxGT("Modo de pasos");
-  LSTR MSG_TMC_STEALTHCHOP                = _UxGT("StealthChop");
-
-  LSTR MSG_SERVICE_RESET                  = _UxGT("Reiniciar");
-  LSTR MSG_SERVICE_IN                     = _UxGT(" dentro:");
-  LSTR MSG_BACKLASH                       = _UxGT("Backlash");
-  LSTR MSG_BACKLASH_CORRECTION            = _UxGT("Corrección");
-  LSTR MSG_BACKLASH_SMOOTHING             = _UxGT("Suavizado");
-
-  LSTR MSG_LEVEL_X_AXIS                   = _UxGT("Nivel Eje X");
-  LSTR MSG_AUTO_CALIBRATE                 = _UxGT("Auto Calibrar");
-  LSTR MSG_HEATER_TIMEOUT                 = _UxGT("T. de esp. Calent.");
-  LSTR MSG_REHEAT                         = _UxGT("Recalentar");
-  LSTR MSG_REHEATING                      = _UxGT("Recalentando...");
-}
-
-namespace LanguageWide_es {
-  using namespace LanguageNarrow_es;
-  #if LCD_WIDTH >= 20 || HAS_DWIN_E3V2
-    LSTR MSG_INFO_PRINT_COUNT             = _UxGT("Cont. de impresión");
-    LSTR MSG_INFO_COMPLETED_PRINTS        = _UxGT("Completadas");
-    LSTR MSG_INFO_PRINT_TIME              = _UxGT("Tiempo total de imp.");
-    LSTR MSG_INFO_PRINT_LONGEST           = _UxGT("Impresión más larga");
-    LSTR MSG_INFO_PRINT_FILAMENT          = _UxGT("Total Extruido");
-  #endif
-}
-
-namespace LanguageTall_es {
-  using namespace LanguageWide_es;
   #if LCD_HEIGHT >= 4
-    // Filament Change screens show up to 3 lines on a 4-line display
     LSTR MSG_ADVANCED_PAUSE_WAITING       = _UxGT(MSG_2_LINE("Pulsar el botón para", "reanudar impresión"));
     LSTR MSG_PAUSE_PRINT_PARKING          = _UxGT(MSG_1_LINE("Aparcando..."));
     LSTR MSG_FILAMENT_CHANGE_INIT         = _UxGT(MSG_3_LINE("Esperando para", "iniciar el cambio", "de filamento"));
@@ -590,9 +546,34 @@ namespace LanguageTall_es {
     LSTR MSG_FILAMENT_CHANGE_PURGE        = _UxGT(MSG_2_LINE("Espere para", "purgar el filamento"));
     LSTR MSG_FILAMENT_CHANGE_CONT_PURGE   = _UxGT(MSG_2_LINE("Pulse para finalizar", "la purga de filamen."));
     LSTR MSG_FILAMENT_CHANGE_RESUME       = _UxGT(MSG_2_LINE("Esperando impresora", "para reanudar..."));
+  #else
+    LSTR MSG_ADVANCED_PAUSE_WAITING       = _UxGT(MSG_1_LINE("Pulse para continuar"));
+    LSTR MSG_PAUSE_PRINT_PARKING          = _UxGT(MSG_1_LINE("Aparcando..."));
+    LSTR MSG_FILAMENT_CHANGE_INIT         = _UxGT(MSG_1_LINE("Por Favor espere..."));
+    LSTR MSG_FILAMENT_CHANGE_INSERT       = _UxGT(MSG_1_LINE("Inserte y Pulse"));
+    LSTR MSG_FILAMENT_CHANGE_HEAT         = _UxGT(MSG_1_LINE("Pulse para Calentar"));
+    LSTR MSG_FILAMENT_CHANGE_HEATING      = _UxGT(MSG_1_LINE("Calentando..."));
+    LSTR MSG_FILAMENT_CHANGE_UNLOAD       = _UxGT(MSG_1_LINE("Liberando..."));
+    LSTR MSG_FILAMENT_CHANGE_LOAD         = _UxGT(MSG_1_LINE("Cargando..."));
+    LSTR MSG_FILAMENT_CHANGE_PURGE        = _UxGT(MSG_1_LINE("Purgando..."));
+    LSTR MSG_FILAMENT_CHANGE_CONT_PURGE   = _UxGT(MSG_1_LINE("Pulse para finalizar"));
+    LSTR MSG_FILAMENT_CHANGE_RESUME       = _UxGT(MSG_1_LINE("Reanudando..."));
   #endif
-}
+  LSTR MSG_TMC_DRIVERS                    = _UxGT("Controladores TMC");
+  LSTR MSG_TMC_CURRENT                    = _UxGT("Amperaje Controlador");
+  LSTR MSG_TMC_HYBRID_THRS                = _UxGT("Límite Hibrido");
+  LSTR MSG_TMC_HOMING_THRS                = _UxGT("Origen sin sensores");
+  LSTR MSG_TMC_STEPPING_MODE              = _UxGT("Modo de pasos");
+  LSTR MSG_TMC_STEALTH_ENABLED            = _UxGT("StealthChop Habilit.");
+  LSTR MSG_SERVICE_RESET                  = _UxGT("Reiniciar");
+  LSTR MSG_SERVICE_IN                     = _UxGT(" dentro:");
+  LSTR MSG_BACKLASH                       = _UxGT("Backlash");
+  LSTR MSG_BACKLASH_CORRECTION            = _UxGT("Corrección");
+  LSTR MSG_BACKLASH_SMOOTHING             = _UxGT("Suavizado");
 
-namespace Language_es {
-  using namespace LanguageTall_es;
+  LSTR MSG_LEVEL_X_AXIS                   = _UxGT("Nivel Eje X");
+  LSTR MSG_AUTO_CALIBRATE                 = _UxGT("Auto Calibrar");
+  LSTR MSG_HEATER_TIMEOUT                 = _UxGT("T. de esp. Calent.");
+  LSTR MSG_REHEAT                         = _UxGT("Recalentar");
+  LSTR MSG_REHEATING                      = _UxGT("Recalentando...");
 }

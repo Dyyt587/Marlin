@@ -51,35 +51,31 @@
 //
 // EEPROM
 //
-#if ANY(NO_EEPROM_SELECTED, FLASH_EEPROM_EMULATION)
+#if EITHER(NO_EEPROM_SELECTED, FLASH_EEPROM_EMULATION)
   #define FLASH_EEPROM_EMULATION
-  #define EEPROM_PAGE_SIZE                0x800U  // 2K
+  #define EEPROM_PAGE_SIZE     (0x800U)           // 2K
   #define EEPROM_START_ADDRESS (0x8000000UL + (STM32_FLASH_SIZE) * 1024UL - (EEPROM_PAGE_SIZE) * 2UL)
   #define MARLIN_EEPROM_SIZE    EEPROM_PAGE_SIZE  // 2K
 #endif
 
 //
 // SPI
-//
-#define SPI_DEVICE                             2  // Maple
-
-//
-// SD Card SPI
+// Note: FLSun Hispeed (clone MKS_Robin_miniV2) board is using SPI2 interface.
 //
 #define SD_SCK_PIN                          PB13  // SPI2
 #define SD_MISO_PIN                         PB14  // SPI2
 #define SD_MOSI_PIN                         PB15  // SPI2
+#define SPI_DEVICE                             2
 
-//
 // SPI Flash
-//
 #define SPI_FLASH
 #if ENABLED(SPI_FLASH)
-  #define SPI_FLASH_SIZE               0x1000000  // 16MB
+  // SPI 2
   #define SPI_FLASH_CS_PIN                  PB12  // SPI2_NSS / Flash chip-select
-  #define SPI_FLASH_SCK_PIN                 PB13
-  #define SPI_FLASH_MISO_PIN                PB14
   #define SPI_FLASH_MOSI_PIN                PB15
+  #define SPI_FLASH_MISO_PIN                PB14
+  #define SPI_FLASH_SCK_PIN                 PB13
+  #define SPI_FLASH_SIZE               0x1000000  // 16MB
 #endif
 
 //
@@ -94,6 +90,10 @@
 #define Y_STOP_PIN                          PA12  // -Y
 #define Z_MIN_PIN                           PA11  // -Z
 #define Z_MAX_PIN                           PC4   // +Z
+
+#ifndef FIL_RUNOUT_PIN
+  #define FIL_RUNOUT_PIN                    PA4   // MT_DET
+#endif
 
 //
 // Steppers
@@ -117,17 +117,18 @@
 /**
  * FLSUN Hi-Speed has no hard-wired UART pins for TMC drivers.
  * Several wiring options are provided below, defaulting to
- * the most compatible.
+ * to the most compatible.
  */
 #if HAS_TMC_UART
   // SoftwareSerial with one pin per driver
-  // Compatible with TMC2208/TMC2209 drivers
+  // Compatible with TMC2208 and TMC2209 drivers
   #define X_SERIAL_TX_PIN                   PA10  // RXD1
+  #define X_SERIAL_RX_PIN        X_SERIAL_TX_PIN
   #define Y_SERIAL_TX_PIN                   PA9   // TXD1
+  #define Y_SERIAL_RX_PIN        Y_SERIAL_TX_PIN
   #define Z_SERIAL_TX_PIN                   PC7   // IO1
-  #ifndef TMC_BAUD_RATE
-    #define TMC_BAUD_RATE                  19200
-  #endif
+  #define Z_SERIAL_RX_PIN        Z_SERIAL_TX_PIN
+  #define TMC_BAUD_RATE                    19200
 #else
   // Motor current PWM pins
   #define MOTOR_CURRENT_PWM_XY_PIN          PA6   // VREF2/3 CONTROL XY
@@ -165,8 +166,10 @@
 //
 // EXTRUDER
 //
-#if AXIS_HAS_UART(E0)
+#if AXIS_DRIVER_TYPE_E0(TMC2208) || AXIS_DRIVER_TYPE_E0(TMC2209)
   #define E0_SERIAL_TX_PIN                  PA8   // IO0
+  #define E0_SERIAL_RX_PIN                  PA8   // IO0
+  #define TMC_BAUD_RATE                    19200
 #else
   // Motor current PWM pins
   #define MOTOR_CURRENT_PWM_E_PIN           PB0   // VREF1 CONTROL E
@@ -220,14 +223,10 @@
   //#define PS_ON_PIN                       PA3   // PW_CN /PW_OFF
 #endif
 
-#ifndef FIL_RUNOUT_PIN
-  #define FIL_RUNOUT_PIN                    PA4   // MT_DET_1
-#endif
-#ifndef FIL_RUNOUT2_PIN
-  #define FIL_RUNOUT2_PIN                   PE6   // MT_DET_2
-#endif
-#ifndef FIL_RUNOUT_STATE
-  #define FIL_RUNOUT_STATE                LOW
+#if HAS_TFT_LVGL_UI
+  #define MT_DET_1_PIN                      PA4   // MT_DET
+  #define MT_DET_2_PIN                      PE6
+  #define MT_DET_PIN_STATE                   LOW
 #endif
 
 //
@@ -237,8 +236,8 @@
 
 #if ENABLED(NEOPIXEL_LED)
   #define LED_PWM                           PC7   // IO1
-  #ifndef BOARD_NEOPIXEL_PIN
-    #define BOARD_NEOPIXEL_PIN           LED_PWM  // USED WIFI IO0/IO1 PIN
+  #ifndef NEOPIXEL_PIN
+    #define NEOPIXEL_PIN                 LED_PWM  // USED WIFI IO0/IO1 PIN
   #endif
 #endif
 
@@ -254,6 +253,7 @@
   #define SD_SCK_PIN                        PC12
   #define SD_MISO_PIN                       PC8
   #define SD_MOSI_PIN                       PD2
+  #define SD_SS_PIN                         -1
   #define SD_DETECT_PIN                     PD12  // SD_CD (if -1 no detection)
 #else
   #define ONBOARD_SDIO
@@ -267,7 +267,6 @@
 //
 // LCD / Controller
 //
-
 #ifndef BEEPER_PIN
   #define BEEPER_PIN                        PC5
 #endif
@@ -286,27 +285,30 @@
    * ILI9488 is not supported
    * Define init sequences for other screens in u8g_dev_tft_320x240_upscale_from_128x64.cpp
    *
-   * If the screen stays white, disable 'TFT_RESET_PIN' to let the bootloader init the screen.
+   * If the screen stays white, disable 'LCD_RESET_PIN'
+   * to let the bootloader init the screen.
    *
-   * Setting a 'TFT_RESET_PIN' may cause a flicker when switching menus
+   * Setting an 'LCD_RESET_PIN' may cause a flicker when entering the LCD menu
    * because Marlin uses the reset as a failsafe to revive a glitchy LCD.
    */
   //#define TFT_RESET_PIN                   PC6   // FSMC_RST
   #define TFT_BACKLIGHT_PIN                 PD13
 
-  #define LCD_USE_DMA_FSMC
+  #define LCD_USE_DMA_FSMC                        // Use DMA transfers to send data to the TFT
+
   #define FSMC_CS_PIN                       PD7   // NE4
   #define FSMC_RS_PIN                       PD11  // A0
+
   #define TFT_CS_PIN                 FSMC_CS_PIN
   #define TFT_RS_PIN                 FSMC_RS_PIN
 
-  #if ENABLED(TFT_CLASSIC_UI)
+  #ifdef TFT_CLASSIC_UI
     #define TFT_MARLINBG_COLOR            0x3186  // Grey
     #define TFT_MARLINUI_COLOR            0xC7B6  // Green
     #define TFT_BTARROWS_COLOR            0xDEE6  // Yellow
     #define TFT_BTOKMENU_COLOR            0x145F  // Cyan
   #endif
-  #define TFT_BUFFER_WORDS                 14400
+  #define TFT_BUFFER_SIZE                  14400
 
 #elif HAS_GRAPHICAL_TFT
 

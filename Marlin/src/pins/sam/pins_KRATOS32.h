@@ -32,9 +32,9 @@
 //
 // EEPROM
 //
-#if ANY(NO_EEPROM_SELECTED, I2C_EEPROM)
+#if EITHER(NO_EEPROM_SELECTED, I2C_EEPROM)
   #define I2C_EEPROM
-  #define MARLIN_EEPROM_SIZE            0x1F400U  // 128000 bytes
+  #define MARLIN_EEPROM_SIZE             0x1F400  // 16K
 #endif
 
 //
@@ -145,14 +145,13 @@
 //
 // LCD / Controller
 //
-
 #if HAS_WIRED_LCD
 
   #define BTN_EN1                             48
   #define BTN_EN2                             50
   #define BTN_ENC                             46
 
-  #define SD_SS_PIN                            4
+  #define SDSS                                 4
   #define SD_DETECT_PIN                       14
 
   #define BEEPER_PIN                          41

@@ -8,32 +8,29 @@
 
 [[ -d Marlin/src ]] || { echo "Please 'cd' to the Marlin repo root." ; exit 1 ; }
 
-which pio >/dev/null || { echo "Make sure 'pio' is in your execution PATH." ; exit 1 ;  }
-
 perror() { echo -e "$0: \033[0;31m$1 -- $2\033[0m" ; }
 errout() { echo -e "\033[0;31m$1\033[0m" ; }
 bugout() { ((DEBUG)) && echo -e "\033[0;32m$1\033[0m" ; }
 
 usage() {
   echo "
-Usage: mftest [-a|--autobuild]
+Usage: mftest [-t|--env=<env|index>] [-n|--num=<num>] [-m|--make] [-y|--build=<Y|n>]
+       mftest [-a|--autobuild]
        mftest [-r|--rebuild]
        mftest [-s|--silent]
-       mftest [-t|--env=<env|index>] [-n|--num=<num>] [-m|--make] [-y|--build=<Y|n>]
        mftest [-u|--autoupload] [-n|--num=<num>]
 
 OPTIONS
-  -a --autobuild   PIO Build using the MOTHERBOARD environment.
-  -d --default     Restore to defaults before applying configs.
-  -h --help        Print this help.
-  -m --make        Use the make / Docker method for the build.
-  -n --num         The index of the test to run. (In file order.)
-  -r --rebuild     Rebuild previous PIO Build.
-  -s --silent      Silence build output from PlatformIO.
   -t --env         The environment to apply / run, or the menu index number.
+  -n --num         The index of the test to run. (In file order.)
+  -m --make        Use the make / Docker method for the build.
+  -y --build       Skip 'Do you want to build this test?' and assume YES.
+  -h --help        Print this help.
+  -a --autobuild   PIO Build using the MOTHERBOARD environment.
   -u --autoupload  PIO Upload using the MOTHERBOARD environment.
   -v --verbose     Extra output for debugging.
-  -y --build       Skip 'Do you want to build this test?' and assume YES.
+  -s --silent      Silence build output from PlatformIO.
+  -d --default     Restore to defaults before applying configs.
 
 env shortcuts: tree due esp lin lp8|lpc8 lp9|lpc9 m128 m256|mega stm|f1 f4 f7 s6 teensy|t31|t32 t35|t36 t40|t41
 "
@@ -42,6 +39,7 @@ env shortcuts: tree due esp lin lp8|lpc8 lp9|lpc9 m128 m256|mega stm|f1 f4 f7 s6
 TESTPATH=buildroot/tests
 
 STATE_FILE="./.pio/.mftestrc"
+SED=$(which gsed sed | head -n1)
 
 shopt -s extglob nocasematch
 
@@ -57,7 +55,7 @@ TESTENV='-'
 CHOICE=0
 DEBUG=0
 
-while getopts 'adhmn:rst:uvy-:' OFLAG; do
+while getopts 'abdhmrsuvyn:t:-:' OFLAG; do
   case "${OFLAG}" in
     a) AUTO_BUILD=1 ; bugout "Auto-Build target..." ;;
     d) DL_DEFAULTS=1 ; bugout "Restore to defaults..." ;;
@@ -74,7 +72,7 @@ while getopts 'adhmn:rst:uvy-:' OFLAG; do
     u) AUTO_BUILD=2      ; bugout "Auto-Upload target..." ;;
     v) DEBUG=1           ; bugout "Debug ON" ;;
     y) BUILD_YES='Y'     ; bugout "Build will initiate..." ;;
-    -) ONAM="${OPTARG%%=*}" ; OVAL="${OPTARG#*=}"
+    -) IFS="=" read -r ONAM OVAL <<< "$OPTARG"
        case "$ONAM" in
          help) [[ -z "$OVAL" ]] || perror "option can't take value $OVAL" $ONAM ; EXIT_USAGE=1 ;;
     autobuild) AUTO_BUILD=1 ; bugout "Auto-Build target..."  ;;
@@ -107,7 +105,6 @@ debug|verbose) DEBUG=1    ; bugout "Debug ON" ;;
     *) EXIT_USAGE=2 ;;
   esac
 done
-shift $((OPTIND - 1))
 
 ((EXIT_USAGE)) && { usage ; let EXIT_USAGE-- ; exit $EXIT_USAGE ; }
 
@@ -134,7 +131,7 @@ lp9|lpc9) TESTENV='LPC1769' ;;
       f1) TESTENV='STM32F103RE' ;;
       f4) TESTENV='STM32F4' ;;
       f7) TESTENV='STM32F7' ;;
-      s6) TESTENV='STM32F446VE_fysetc' ;;
+      s6) TESTENV='FYSETC_S6' ;;
   teensy) TESTENV='teensy31' ;;
      t31) TESTENV='teensy31' ;;
      t32) TESTENV='teensy31' ;;
@@ -159,27 +156,13 @@ if ((AUTO_BUILD)); then
          *) SYS='uni' ;;
   esac
   echo ; echo -n "Auto " ; ((AUTO_BUILD == 2)) && echo "Upload..." || echo "Build..."
-
-  #
-  # Get the MOTHERBOARD define value from the .h file and strip off the "BOARD_" prefix
-  #
-  ACODE='/^[[:space:]]*#define[[:space:]]MOTHERBOARD[[:space:]]/ { sub(/^BOARD_/, "", $3); print $3 }'
-  MB=$(awk "$ACODE" Marlin/Configuration.h 2>/dev/null)
-  [[ -z $MB ]] && MB=$(awk "$ACODE" Marlin/Config.h 2>/dev/null)
+  MB=$( grep -E "^\s*#define MOTHERBOARD" Marlin/Configuration.h | awk '{ print $3 }' | $SED 's/BOARD_//;s/\r//' )
   [[ -z $MB ]] && { echo "Error - Can't read MOTHERBOARD setting." ; exit 1 ; }
   BLINE=$( grep -E "define\s+BOARD_$MB\b" Marlin/src/core/boards.h )
-  BNUM=$( sed -E 's/^.+BOARD_[^ ]+ +([0-9]+).+$/\1/' <<<"$BLINE" )
-  BDESC=$( sed -E 's/^.+\/\/ *(.+)$/\1/' <<<"$BLINE" )
+  BNUM=$( $SED -E 's/^.+BOARD_[^ ]+ +([0-9]+).+$/\1/' <<<"$BLINE" )
+  BDESC=$( $SED -E 's/^.+\/\/ *(.+)$/\1/' <<<"$BLINE" )
   [[ -z $BNUM ]] && { echo "Error - Can't find BOARD_$MB in core/boards.h." ; exit 1 ; }
-  ENVS=( $( grep -EA1 "MB\(.*\b$MB\b.*\)" Marlin/src/pins/pins.h | grep -E "#include.+//.+(env|$SYS):[^ ]+" | grep -oE "(env|$SYS):[^ ]+" | sed -E "s/(env|$SYS)://" ) )
-  # If AUTO_BUILD is not 2 (upload), strip envs ending in '_xfer' from $ENVS
-  if [[ $AUTO_BUILD != 2 ]]; then
-    OENV=()
-    for env in "${ENVS[@]}"; do
-      [[ ! $env =~ _xfer$ ]] && OENV+=( "$env" )
-    done
-    ENVS=( "${OENV[@]}" )
-  fi
+  ENVS=( $( grep -EA1 "MB\(.*\b$MB\b.*\)" Marlin/src/pins/pins.h | grep -E "#include.+//.+(env|$SYS):[^ ]+" | grep -oE "(env|$SYS):[^ ]+" | $SED -E "s/(env|$SYS)://" ) )
   [[ -z $ENVS ]] && { errout "Error - Can't find target(s) for $MB ($BNUM)." ; exit 1 ; }
   ECOUNT=${#ENVS[*]}
 
@@ -204,12 +187,9 @@ if ((AUTO_BUILD)); then
       fi
     else
       echo "Detected \"$BDESC\" | $MB ($BNUM)."
-      [[ $CHOICE > $ECOUNT ]] && { echo "Environment selection out of range." ; exit 66 ; }
+      [[ $CHOICE > $ECOUNT ]] && { echo "Environment selection out of range." ; exit 1 ; }
     fi
     TARGET="${ENVS[$CHOICE-1]}"
-    if [[ $MB == 'SIMULATED' && $TARGET == 'linux_native' ]]; then
-      TARGET="simulator_linux_release" # Skip the linux_native environment
-    fi
     echo "Selected $TARGET"
   fi
 
@@ -288,7 +268,7 @@ if [[ $CHOICE == 0 ]]; then
     while IFS= read -r LINE
     do
       if [[ $LINE =~ $ISEXEC ]]; then
-        DESC=$( sed -E 's/^exec_test \$1 \$2 "([^"]+)".*$/\1/g' <<<"$LINE" )
+        DESC=$( "$SED" -E 's/^exec_test \$1 \$2 "([^"]+)".*$/\1/g' <<<"$LINE" )
         (( ++IND < 10 )) && echo -n " "
         echo " $IND) $DESC"
       fi
@@ -333,7 +313,7 @@ echo "$OUT" | {
         ((IND == CHOICE)) && {
           GOTX=1
           [[ -n $DL_DEFAULTS && $LINE =~ $ISRST ]] && LINE="use_example_configs"
-          [[ $CMD == "" ]] && CMD="$LINE" || CMD=$( echo -e "$CMD$LINE" | sed -e 's/\\//g' | sed -E 's/ +/ /g' )
+          [[ $CMD == "" ]] && CMD="$LINE" || CMD=$( echo -e "$CMD$LINE" | $SED -e 's/\\//g' | $SED -E 's/ +/ /g' )
           [[ $LINE =~ $ISCONT ]] || { echo "$CMD" ; eval "$CMD" ; CMD="" ; }
         }
       fi

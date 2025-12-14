@@ -47,28 +47,27 @@
 /**
  * M106: Set Fan Speed
  *
- * Parameters:
- *   I<index>  Material Preset index (if material presets are defined)
- *   S<int>    Speed between 0-255
- *   P<index>  Fan index, if more than one fan
+ *  I<index> Material Preset index (if material presets are defined)
+ *  S<int>   Speed between 0-255
+ *  P<index> Fan index, if more than one fan
  *
- * With EXTRA_FAN_SPEED:
- *   T<int>  Restore/Use/Set Temporary Speed:
- *     T1      Restore previous speed after T2
- *     T2      Use temporary speed set with T3-255
- *     T3-255  Set the speed for use with T2
+ * With EXTRA_FAN_SPEED enabled:
+ *
+ *  T<int>   Restore/Use/Set Temporary Speed:
+ *           1     = Restore previous speed after T2
+ *           2     = Use temporary speed set with T3-255
+ *           3-255 = Set the speed for use with T2
  */
 void GcodeSuite::M106() {
   const uint8_t pfan = parser.byteval('P', _ALT_P);
   if (pfan >= _CNT_P) return;
-  if (FAN_IS_REDUNDANT(pfan)) return;
+  #if REDUNDANT_PART_COOLING_FAN
+    if (pfan == REDUNDANT_PART_COOLING_FAN) return;
+  #endif
 
   #if ENABLED(EXTRA_FAN_SPEED)
     const uint16_t t = parser.intval('T');
-    if (t > 0) {
-      thermalManager.set_temp_fan_speed(pfan, t);
-      return;
-    }
+    if (t > 0) return thermalManager.set_temp_fan_speed(pfan, t);
   #endif
 
   const uint16_t dspeed = parser.seen_test('A') ? thermalManager.fan_speed[active_extruder] : 255;
@@ -86,7 +85,7 @@ void GcodeSuite::M106() {
   if (!got_preset && parser.seenval('S'))
     speed = parser.value_ushort();
 
-  TERN_(FOAMCUTTER_XYUV, speed *= 2.55f); // Get command in % of max heat
+  TERN_(FOAMCUTTER_XYUV, speed *= 2.55); // Get command in % of max heat
 
   // Set speed, with constraint
   thermalManager.set_fan_speed(pfan, speed);
@@ -103,7 +102,9 @@ void GcodeSuite::M106() {
 void GcodeSuite::M107() {
   const uint8_t pfan = parser.byteval('P', _ALT_P);
   if (pfan >= _CNT_P) return;
-  if (FAN_IS_REDUNDANT(pfan)) return;
+  #if REDUNDANT_PART_COOLING_FAN
+    if (pfan == REDUNDANT_PART_COOLING_FAN) return;
+  #endif
 
   thermalManager.set_fan_speed(pfan, 0);
 

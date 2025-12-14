@@ -20,11 +20,14 @@
  *
  */
 
-#include "../../fontdata.h"
+#include "../../../../../inc/MarlinConfigPre.h"
 
+#define UNIFONT 123
 #if HAS_GRAPHICAL_TFT && TFT_FONT == UNIFONT
 
-// Unifont ASCII 16pt, capital 'A' height: 10px, width: 100%, range: 0x0020-0x007e
+#include <stdint.h>
+
+// Unifont ASCII 16pt, capital 'A' heigth: 10px, width: 100%, range: 0x0020-0x007e
 extern const uint8_t Unifont_ASCII_10[1440] = {
   129,10,32,0,126,0,14,254, // unifont_t
   // 0x0020 " "

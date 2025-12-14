@@ -39,7 +39,7 @@
 
 #if NO_EEPROM_SELECTED
   #define I2C_EEPROM
-  #define MARLIN_EEPROM_SIZE             0x1000U  // 4K
+  #define MARLIN_EEPROM_SIZE              0x1000  // 4K
 #endif
 
 //
@@ -135,7 +135,7 @@
 //
 // Misc functions
 //
-#define SD_SS_PIN                           PE7
+#define SDSS                                PE7
 #define LED_PIN                             PB7   // Heart beat
 #define PS_ON_PIN                           PA10
 #define KILL_PIN                            PA8
@@ -149,7 +149,7 @@
 
 #if ENABLED(FYSETC_MINI_12864)
   //
-  // See https://wiki.fysetc.com/docs/Mini12864Panel
+  // See https://wiki.fysetc.com/Mini12864_Panel/
   //
   #define DOGLCD_A0                         PE9
   #define DOGLCD_CS                         PE8
@@ -158,7 +158,7 @@
 
   #define LCD_RESET_PIN                     PB12  // Must be high or open for LCD to operate normally.
 
-  #if ANY(FYSETC_MINI_12864_1_2, FYSETC_MINI_12864_2_0)
+  #if EITHER(FYSETC_MINI_12864_1_2, FYSETC_MINI_12864_2_0)
     #ifndef RGB_LED_R_PIN
       #define RGB_LED_R_PIN                 PB13
     #endif
@@ -206,14 +206,22 @@
 #if HAS_TMC_UART
   // TMC2208/TMC2209 stepper drivers
   #define X_SERIAL_TX_PIN               EXT0_PIN
+  #define X_SERIAL_RX_PIN               EXT0_PIN
+
   #define Y_SERIAL_TX_PIN               EXT1_PIN
+  #define Y_SERIAL_RX_PIN               EXT1_PIN
+
   #define Z_SERIAL_TX_PIN               EXT2_PIN
+  #define Z_SERIAL_RX_PIN               EXT2_PIN
+
   #define E0_SERIAL_TX_PIN              EXT3_PIN
+  #define E0_SERIAL_RX_PIN              EXT3_PIN
+
+  #define E1_SERIAL_RX_PIN              EXT4_PIN
   #define E1_SERIAL_TX_PIN              EXT4_PIN
+
+  #define Z2_SERIAL_RX_PIN              EXT4_PIN
   #define Z2_SERIAL_TX_PIN              EXT4_PIN
 
-  #ifndef TMC_BAUD_RATE
-    #define TMC_BAUD_RATE                  19200
-  #endif
-
-#endif // HAS_TMC_UART
+  #define TMC_BAUD_RATE                    19200
+#endif

@@ -106,7 +106,7 @@
 //
 // Misc. Functions
 //
-#define SD_SS_PIN                             53
+#define SDSS                                  53
 #define LED_PIN                               13
 #define PS_ON_PIN                             12
 #define SUICIDE_PIN                           54  // PIN that has to be turned on right after start, to keep power flowing.
@@ -118,7 +118,6 @@
 //
 // LCD / Controller
 //
-
 #if HAS_WIRED_LCD
 
   #define BEEPER_PIN                          18
@@ -139,7 +138,7 @@
 
     #define SD_DETECT_PIN                     38
 
-  #else // !IS_NEWPANEL - Old style panel with shift register
+  #else                                           // !IS_NEWPANEL - Old style panel with shift register
 
     // Buttons attached to a shift register
     #define SHIFT_CLK_PIN                     38
@@ -163,8 +162,6 @@
 //
 // M3/M4/M5 - Spindle/Laser Control
 //
-#if HAS_CUTTER
-  #define SPINDLE_LASER_PWM_PIN                9  // Hardware PWM
-  #define SPINDLE_LASER_ENA_PIN               10  // Pullup!
-  #define SPINDLE_DIR_PIN                     11  // use the EXP3 PWM header
-#endif
+#define SPINDLE_LASER_PWM_PIN                  9  // Hardware PWM
+#define SPINDLE_LASER_ENA_PIN                 10  // Pullup!
+#define SPINDLE_DIR_PIN                       11  // use the EXP3 PWM header
